@@ -18,22 +18,18 @@ if (LUACHECK)
     )
 endif()
 
-find_program(STYLUA NAMES stylua)
+find_program(LUAFORMATTER NAMES lua-format)
 
-if (STYLUA)
-    set(STYLUA_OPTIONS
-        ${STYLUA} NSEW/
-    )
-
-    add_custom_target(stylua-reformat
+if (LUAFORMATTER)
+    add_custom_target(formatter-reformat
         VERBATIM
-        COMMAND ${STYLUA_OPTIONS} --verify
+        COMMAND ${LUAFORMATTER} -i -- ${LUA_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-    add_custom_target(stylua-check
+    add_custom_target(formatter-check
         VERBATIM
-        COMMAND ${STYLUA_OPTIONS} --check
+        COMMAND ${LUAFORMATTER} --check -- ${LUA_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
