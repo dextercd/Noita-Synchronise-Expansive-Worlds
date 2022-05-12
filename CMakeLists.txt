@@ -13,7 +13,6 @@ if (LUACHECK)
         VERBATIM
         COMMAND
             ${LUACHECK}
-                --max-cyclomatic-complexity 15
                 ${LUA_FILES}
     )
 endif()
