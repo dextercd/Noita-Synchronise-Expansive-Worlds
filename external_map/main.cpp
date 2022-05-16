@@ -126,7 +126,7 @@ void run(sf::TcpSocket& client)
             data_left = receive_all_or_none(client, dimens_data, sizeof(dimens_data)) == sf::Socket::Status::Done;
 
             if (!data_left) {
-                received_nothing = std::min(50, received_nothing + 1);
+                received_nothing = std::min(120, received_nothing + 1);
                 auto sleep_for = std::max(0, received_nothing - 10) * 15;
                 if (sleep_for > 0) {
                     std::this_thread::sleep_for(
