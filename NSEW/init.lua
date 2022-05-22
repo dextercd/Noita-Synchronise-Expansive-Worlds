@@ -31,8 +31,54 @@ struct AABB {
     struct Position bottom_right;
 };
 
+struct Cell_vtable {
+    void (__thiscall *destroy)(struct Cell*, char dealloc);
+    int (__thiscall *lifetime_type)(struct Cell*);
+    void* field2_0x8;
+    void* field3_0xc;
+    void* field4_0x10;
+    struct colour (__thiscall *get_colour)(struct Cell*);
+    void* field6_0x18;
+    void* field7_0x1c;
+    void* field8_0x20;
+    void* field9_0x24;
+    void* field10_0x28;
+    void* field11_0x2c;
+    //void * (* get_material)(void *);
+    void* gm;
+    void* field13_0x34;
+    void* field14_0x38;
+    void* field15_0x3c;
+    void* field16_0x40;
+    void* field17_0x44;
+    void* field18_0x48;
+    void* field19_0x4c;
+    //position * (* get_position)(void *, struct position *);
+    void* gp;
+    void* field21_0x54;
+    void* field22_0x58;
+    void* field23_0x5c;
+    void* field24_0x60;
+    void* field25_0x64;
+    void* field26_0x68;
+    void* field27_0x6c;
+    void* field28_0x70;
+    void* field29_0x74;
+    void* field30_0x78;
+    void* field31_0x7c;
+    void* field32_0x80;
+    void* field33_0x84;
+    void* field34_0x88;
+    void* field35_0x8c;
+    void* field36_0x90;
+    void* field37_0x94;
+    void* field38_0x98;
+    void (__thiscall *remove)(struct Cell*);
+    void* field40_0xa0;
+};
+
 struct Cell {
-    unsigned vtable;
+    struct Cell_vtable* vtable;
     int hp;
     int unknown[3];
     unsigned material_ptr;
@@ -119,6 +165,9 @@ struct __attribute__ ((__packed__)) pixel_message {
 
 uint32_t GetCurrentThreadId();
 
+void* malloc(size_t);
+void free(void*);
+
 ]])
 
 local get_pixel = ffi.cast("get_pixel_f*", 0x07bf560)
@@ -194,13 +243,13 @@ function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
             local pixel_index = (y - start_y) * width + (x - start_x)
             local message = messages[pixel_index]
 
-            local pixel = get_pixel(chunk_map, x, y)
-            if pixel[0] ~= nil then
-                if pixel[0].vtable == 0xe1a45c then
-                    message.col[0] = pixel[0].colour.r
-                    message.col[1] = pixel[0].colour.g
-                    message.col[2] = pixel[0].colour.b
-                end
+            local ppixel = get_pixel(chunk_map, x, y)
+            if ppixel[0] ~= nil then
+                local pixel = ppixel[0]
+                local cell_colour = pixel.vtable.get_colour(pixel)
+                message.col[0] = cell_colour.r
+                message.col[1] = cell_colour.g
+                message.col[2] = cell_colour.b
             end
 
             x = x + 1
