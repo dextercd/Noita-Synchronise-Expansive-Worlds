@@ -147,7 +147,6 @@ void run(sf::TcpSocket& client)
             auto height = end_y - start_y;
             auto area = width * height;
 
-            std::cout << start_x << ", " << start_y << ": " << area << '\n';
 
             pixel_data_buf.resize(3 * area);
             receive_all(client, &pixel_data_buf[0], std::size(pixel_data_buf));
@@ -156,6 +155,14 @@ void run(sf::TcpSocket& client)
             for (int y = start_y; y != end_y; ++y) {
                 for (int x = start_x; x != end_x; ++x) {
                     char* data = &pixel_data_buf[ix * 3];
+
+                    if (ix == 0) {
+                        std::cout << start_x << ", " << start_y << ": " << area << '\n';
+                        std::cout
+                            << (unsigned)(std::uint8_t)data[0] << ":"
+                            << (unsigned)(std::uint8_t)data[1] << ":"
+                            << (unsigned)(std::uint8_t)data[2] << "\n\n";
+                    }
 
                     map_image.setPixel(
                         (x + (int)image_size.x / 2) % image_size.x,
