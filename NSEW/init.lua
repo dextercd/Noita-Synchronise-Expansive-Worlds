@@ -81,7 +81,7 @@ struct Cell {
     struct Cell_vtable* vtable;
     int hp;
     int unknown[3];
-    unsigned material_ptr;
+    uintptr_t material_ptr;
     int x;
     int y;
     int unknown2[4];
@@ -158,7 +158,8 @@ struct GridWorldThreadImpl {
 };
 
 typedef struct Cell** __thiscall get_pixel_f(struct ChunkMap* this, int x, int y);
-typedef void __thiscall remove_cell(struct GridWorld*, void* cell, int x, int y, bool);
+typedef void __thiscall remove_cell_f(struct GridWorld*, void* cell, int x, int y, bool);
+typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y, void* material_ptr, void* memory);
 
 struct __attribute__ ((__packed__)) pixel_message {
     char col[3];
@@ -172,7 +173,8 @@ void free(void*);
 ]])
 
 local get_pixel = ffi.cast("get_pixel_f*", 0x07bf560)
-local remove_cell = ffi.cast("remove_cell*", 0x6a83c0)
+local remove_cell = ffi.cast("remove_cell_f*", 0x6a83c0)
+local construct_cell = ffi.cast("construct_cell_f*", 0x691b70)
 
 function get_grid_world()
     local game_global = ffi.cast("void**", 0x100d558)[0]
@@ -204,26 +206,78 @@ function set_colour(grid_world, x, y, col)
     -- print(ppixel[0].material_ptr)
 end
 
+function get_player()
+    return EntityGetWithTag("player_unit")[1]
+end
+
 function get_cursor_position()
     local x, y = DEBUG_GetMouseWorld()
     return x, y
 end
 
+function left_pressed()
+    local control = EntityGetFirstComponent(get_player(), "ControlsComponent")
+    return (
+        ComponentGetValue2(control, "mButtonDownFire") and
+        ComponentGetValue2(control, "mButtonDownFire2")
+    )
+end
+
+function right_pressed()
+    local control = EntityGetFirstComponent(get_player(), "ControlsComponent")
+    return ComponentGetValue2(control, "mButtonDownThrow")
+end
+
+local material_props_size = 0x28c
+function get_material_ptr(id)
+    local game_global = ffi.cast("char**", 0x100d558)[0]
+    local cell_factory = ffi.cast('char**', (game_global + 0x18))[0]
+    local count = tonumber(ffi.cast('unsigned*', cell_factory + 0x24)[0])
+    local begin = ffi.cast('char**', cell_factory + 0x18)[0]
+    local ptr = begin + material_props_size * id
+    return ptr
+end
+
 function OnWorldPreUpdate() 
     wake_up_waiting_threads(1) 
+
+    local material1 = nil
+    local material2 = nil
+
+    if left_pressed() then
+        material1 = get_material_ptr(CellFactory_GetType("gold"))
+        material2 = get_material_ptr(CellFactory_GetType("templebrick_static"))
+    elseif right_pressed() then
+        material1 = get_material_ptr(CellFactory_GetType("fire"))
+        material2 = get_material_ptr(CellFactory_GetType("fire_blue"))
+    else
+        return
+    end
 
     local grid_world = get_grid_world()
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
 
     local ax, ay = get_cursor_position()
-    local range = 20
-    for x=ax - range, ax + range do
-        for y=ay - range, ay + range do
+
+    local xrange = 3
+    local yrange = 10
+    for y=ay - yrange, ay + yrange do
+        for x=ax - xrange, ax + xrange do
             local ppixel = get_pixel(chunk_map, x, y)
+            local pixel = nil
 
             if ppixel[0] ~= nil then
-                local pixel = ppixel[0]
-                remove_cell(grid_world, pixel, x, y, false)
+                pixel = ppixel[0]
+                if pixel.material_ptr ~= ffi.cast("uintptr_t", material2) then
+                    remove_cell(grid_world, pixel, x, y, false)
+                    pixel = construct_cell(grid_world, x, y, material1, nil)
+                end
+            else
+                pixel = construct_cell(grid_world, x, y, material2, nil)
+            end
+
+            if pixel then
+                ppixel[0] = pixel
             end
         end
     end
