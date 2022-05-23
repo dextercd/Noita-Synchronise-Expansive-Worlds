@@ -39,7 +39,7 @@ struct Cell_vtable {
     void* field4_0x10;
     struct colour (__thiscall *get_colour)(struct Cell*);
     void* field6_0x18;
-    void* field7_0x1c;
+    void (__thiscall *set_colour)(struct Cell*, struct colour);
     void* field8_0x20;
     void* field9_0x24;
     void* field10_0x28;
@@ -158,6 +158,7 @@ struct GridWorldThreadImpl {
 };
 
 typedef struct Cell** __thiscall get_pixel_f(struct ChunkMap* this, int x, int y);
+typedef void __thiscall remove_cell(struct GridWorld*, void* cell, int x, int y, bool);
 
 struct __attribute__ ((__packed__)) pixel_message {
     char col[3];
@@ -171,6 +172,7 @@ void free(void*);
 ]])
 
 local get_pixel = ffi.cast("get_pixel_f*", 0x07bf560)
+local remove_cell = ffi.cast("remove_cell*", 0x6a83c0)
 
 function get_grid_world()
     local game_global = ffi.cast("void**", 0x100d558)[0]
@@ -178,14 +180,6 @@ function get_grid_world()
     local grid_world = ffi.cast("struct GridWorld**", ffi.cast("char*", world_data) + 0x44)[0]
     return grid_world
 end
-
-local red = 0xff0000
-local orange = 0xffa500
-local yellow = 0xffff00
-local green = 0x008000
-local cyan = 0x00ffff
-local blue = 0x0099ff
-local violet = 0x9900ff
 
 function set_colour(grid_world, x, y, col)
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
@@ -217,6 +211,22 @@ end
 
 function OnWorldPreUpdate() 
     wake_up_waiting_threads(1) 
+
+    local grid_world = get_grid_world()
+    local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
+
+    local ax, ay = get_cursor_position()
+    local range = 20
+    for x=ax - range, ax + range do
+        for y=ay - range, ay + range do
+            local ppixel = get_pixel(chunk_map, x, y)
+
+            if ppixel[0] ~= nil then
+                local pixel = ppixel[0]
+                remove_cell(grid_world, pixel, x, y, false)
+            end
+        end
+    end
 end
 
 function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
