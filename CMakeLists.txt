@@ -78,6 +78,28 @@ if (WIN32)
         PRIVATE ${LUAJIT_COMPILED}/src/lua51.lib ws2_32.lib
     )
 
+    install(
+        TARGETS luasocket-socket
+        DESTINATION "NSEW/cdir/socket"
+    )
+
+    install(
+        FILES
+            ${luasocket_SOURCE_DIR}/src/socket.lua
+            ${luasocket_SOURCE_DIR}/src/ltn12.lua
+        DESTINATION "NSEW/ldir"
+    )
+
+    install(
+        FILES
+            ${luasocket_SOURCE_DIR}/src/http.lua
+            ${luasocket_SOURCE_DIR}/src/tp.lua
+            ${luasocket_SOURCE_DIR}/src/ftp.lua
+            ${luasocket_SOURCE_DIR}/src/smtp.lua
+            ${luasocket_SOURCE_DIR}/src/url.lua
+        DESTINATION "NSEW/ldir/socket"
+    )
+
     if (BUILD_TESTING)
         add_test(
             NAME load-luasocket
@@ -88,28 +110,6 @@ if (WIN32)
                 ${LUAJIT_COMPILED}/src/luajit load_luasocket.lua
 
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test
-        )
-
-        install(
-            TARGETS luasocket-socket
-            DESTINATION "NSEW/cdir/socket"
-        )
-
-        install(
-            FILES
-                ${luasocket_SOURCE_DIR}/src/socket.lua
-                ${luasocket_SOURCE_DIR}/src/ltn12.lua
-            DESTINATION "NSEW/ldir"
-        )
-
-        install(
-            FILES
-                ${luasocket_SOURCE_DIR}/src/http.lua
-                ${luasocket_SOURCE_DIR}/src/tp.lua
-                ${luasocket_SOURCE_DIR}/src/ftp.lua
-                ${luasocket_SOURCE_DIR}/src/smtp.lua
-                ${luasocket_SOURCE_DIR}/src/url.lua
-            DESTINATION "NSEW/ldir/socket"
         )
     endif()
 endif()
