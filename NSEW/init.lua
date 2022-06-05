@@ -404,11 +404,6 @@ function process_data(top_left_x, top_left_y, bottom_right_x, bottom_right_y, re
                 end
 
                 if current_material ~= message.material and message.material ~= 0 then
-                    if x == top_left_x and y == bottom_right_y - 1 then
-                        print("Changing @ " .. tonumber(x) .. ", " .. tonumber(y) ..
-                              " to " .. CellFactory_GetName(tonumber(message.material)))
-                    end
-
                     ppixel[0] = construct_cell(
                         grid_world, x, y, get_material_ptr(message.material), nil)
                 end
@@ -448,10 +443,6 @@ function receive_one()
         receive_top_left_y = coords[1]
         receive_bottom_right_x = coords[2]
         receive_bottom_right_y = coords[3]
-        print(
-            tonumber(receive_top_left_x) .. "," .. tonumber(receive_top_left_y) .. " | " ..
-            tonumber(receive_bottom_right_x) .. "," .. tonumber(receive_bottom_right_y)
-        )
     end
 
     local width = receive_bottom_right_x - receive_top_left_x
