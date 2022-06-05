@@ -511,7 +511,7 @@ function OnWorldPostUpdate()
         local end_x = it.update_region.bottom_right.x
         local end_y = it.update_region.bottom_right.y
 
-        send_world_part(chunk_map, connection, start_x - 1, start_y - 1, end_x + 1, end_y + 1)
+        send_world_part(chunk_map, connection, start_x - 1, start_y - 1, end_x + 1, end_y + 2)
     end
 end
 
