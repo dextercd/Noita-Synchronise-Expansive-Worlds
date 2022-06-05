@@ -69,6 +69,20 @@ sf::Socket::Status sock_read_int(sf::TcpSocket& sock, std::uint32_t& res)
     return sf::Socket::Status::Done;
 }
 
+std::vector<sf::Color> get_random_colors()
+{
+    std::vector<sf::Color> c;
+    for (int i = 0; i != 50000; ++i)
+        c.push_back(sf::Color(std::rand(), std::rand(), std::rand()));
+    return c;
+}
+
+sf::Color get_color(int index)
+{
+    static auto colors = get_random_colors();
+    return colors[index];
+}
+
 
 void run(sf::TcpSocket& client)
 {
@@ -148,30 +162,18 @@ void run(sf::TcpSocket& client)
             auto area = width * height;
 
 
-            pixel_data_buf.resize(3 * area);
+            pixel_data_buf.resize(2 * area);
             receive_all(client, &pixel_data_buf[0], std::size(pixel_data_buf));
 
             std::size_t ix = 0;
             for (int y = start_y; y != end_y; ++y) {
                 for (int x = start_x; x != end_x; ++x) {
-                    char* data = &pixel_data_buf[ix * 3];
-
-                    if (ix == 0) {
-                        std::cout << start_x << ", " << start_y << ": " << area << '\n';
-                        std::cout
-                            << (unsigned)(std::uint8_t)data[0] << ":"
-                            << (unsigned)(std::uint8_t)data[1] << ":"
-                            << (unsigned)(std::uint8_t)data[2] << "\n\n";
-                    }
+                    char* data = &pixel_data_buf[ix * 2];
 
                     map_image.setPixel(
                         (x + (int)image_size.x / 2) % image_size.x,
                         (y + (int)image_size.y / 2) % image_size.y,
-                        sf::Color(
-                            (std::uint8_t)data[0],
-                            (std::uint8_t)data[1],
-                            (std::uint8_t)data[2]
-                        )
+                        get_color(*reinterpret_cast<std::int16_t*>(data))
                     );
 
                     ++ix;

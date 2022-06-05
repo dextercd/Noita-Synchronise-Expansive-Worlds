@@ -7,6 +7,9 @@ include(FetchContent)
 
 option(NSEW_EXTERNAL_MAP "Build external map executable" ON)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 file(GLOB_RECURSE LUA_FILES CONFIGURE_DEPENDS
     "NSEW/*.lua"
 )
@@ -117,3 +120,6 @@ endif()
 if (NSEW_EXTERNAL_MAP)
     add_subdirectory(external_map)
 endif()
+
+add_subdirectory(native)
+add_subdirectory(server)

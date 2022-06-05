@@ -31,9 +31,17 @@ struct AABB {
     struct Position bottom_right;
 };
 
+enum CellType {
+    CELL_TYPE_NONE = 0,
+    CELL_TYPE_LIQUID = 1,
+    CELL_TYPE_GAS = 2,
+    CELL_TYPE_SOLID = 3,
+    CELL_TYPE_FIRE = 4,
+};
+
 struct Cell_vtable {
     void (__thiscall *destroy)(struct Cell*, char dealloc);
-    int (__thiscall *lifetime_type)(struct Cell*);
+    enum CellType (__thiscall *get_cell_type)(struct Cell*);
     void* field2_0x8;
     void* field3_0xc;
     void* field4_0x10;
@@ -44,7 +52,7 @@ struct Cell_vtable {
     void* field9_0x24;
     void* field10_0x28;
     void* field11_0x2c;
-    //void * (* get_material)(void *);
+    void* (__thiscall *get_material)(void *);
     void* gm;
     void* field13_0x34;
     void* field14_0x38;
@@ -157,12 +165,14 @@ struct GridWorldThreadImpl {
     int last_vec[3];
 };
 
-typedef struct Cell** __thiscall get_pixel_f(struct ChunkMap* this, int x, int y);
+typedef struct Cell** __thiscall get_pixel_f(struct ChunkMap*, int x, int y);
+typedef bool __thiscall chunk_loaded_f(struct ChunkMap*, int x, int y);
+
 typedef void __thiscall remove_cell_f(struct GridWorld*, void* cell, int x, int y, bool);
 typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y, void* material_ptr, void* memory);
 
 struct __attribute__ ((__packed__)) pixel_message {
-    char col[3];
+    uint16_t material;
 };
 
 uint32_t GetCurrentThreadId();
@@ -175,6 +185,7 @@ void free(void*);
 local get_pixel = ffi.cast("get_pixel_f*", 0x07bf560)
 local remove_cell = ffi.cast("remove_cell_f*", 0x6a83c0)
 local construct_cell = ffi.cast("construct_cell_f*", 0x691b70)
+local chunk_loaded = ffi.cast("chunk_loaded_f*", 0x7bf440)
 
 function get_grid_world()
     local game_global = ffi.cast("void**", 0x100d558)[0]
@@ -238,8 +249,22 @@ function get_material_ptr(id)
     return ptr
 end
 
-function OnWorldPreUpdate() 
-    wake_up_waiting_threads(1) 
+function get_material_id(ptr)
+    local game_global = ffi.cast("char**", 0x100d558)[0]
+    local cell_factory = ffi.cast('char**', (game_global + 0x18))[0]
+    local begin = ffi.cast('char**', cell_factory + 0x18)[0]
+    local offset = ffi.cast('char*', ptr) - begin
+    return offset / material_props_size
+end
+
+ModMagicNumbersFileAdd("mods/NSEW/files/magic_numbers.xml")
+
+function OnWorldPreUpdate()
+    wake_up_waiting_threads(1)
+
+    if true then
+        return
+    end
 
     local material1 = nil
     local material2 = nil
@@ -284,6 +309,11 @@ function OnWorldPreUpdate()
 end
 
 function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
+    start_x = ffi.cast('int32_t', start_x)
+    start_y = ffi.cast('int32_t', start_y)
+    end_x = ffi.cast('int32_t', end_x)
+    end_y = ffi.cast('int32_t', end_y)
+
     local width = end_x - start_x
     local pixel_count = width * (end_y - start_y)
     local messages = ffi.new('struct pixel_message[?]', pixel_count)
@@ -310,10 +340,10 @@ function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
             local ppixel = get_pixel(chunk_map, x, y)
             if ppixel[0] ~= nil then
                 local pixel = ppixel[0]
-                local cell_colour = pixel.vtable.get_colour(pixel)
-                message.col[0] = cell_colour.r
-                message.col[1] = cell_colour.g
-                message.col[2] = cell_colour.b
+                --if pixel.vtable.get_cell_type(pixel) ~= C.CELL_TYPE_SOLID then
+                    local material_ptr = pixel.vtable.get_material(pixel)
+                    message.material = get_material_id(material_ptr)
+                --end
             end
 
             x = x + 1
@@ -322,7 +352,8 @@ function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
     end
 
     if pixel_count > 0 then
-        local send_pc = ffi.new('uint32_t[4]', {start_x, start_y, end_x, end_y})
+        local send_pc = ffi.new('int32_t[4]', {start_x, start_y, end_x, end_y})
+
         local str = (
             ffi.string(send_pc, 4 * 4) ..
             ffi.string(messages, ffi.sizeof('struct pixel_message') * pixel_count)
@@ -330,17 +361,136 @@ function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
 
         local index = 1
         while index ~= #str do
-            local new_index = connection:send(str, index)
-            if new_index ~= #str then
-                print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " .. new_index)
+            connection:settimeout(nil)
+            local new_index, err, partial_index = connection:send(str, index)
+            if new_index == nil then
+                print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " .. partial_index)
+                print("Error " .. err)
+                index = partial_index
+            else
+                index = new_index
             end
-            index = new_index
         end
     end
 end
 
+function process_data(top_left_x, top_left_y, bottom_right_x, bottom_right_y, received)
+    local buffer = ffi.cast('const char*', received)
+    local messages = ffi.cast('struct pixel_message*', buffer)
+
+    local grid_world = get_grid_world()
+    local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
+
+    local width = bottom_right_x - top_left_x
+
+    local y = top_left_y
+    while y < bottom_right_y do
+        local x = top_left_x
+        while x < bottom_right_x do
+            local pixel_index = (y - top_left_y) * width + (x - top_left_x)
+            local message = messages[pixel_index]
+
+            if chunk_loaded(chunk_map, x, y) then
+                local ppixel = get_pixel(chunk_map, x, y)
+                local current_material = 0
+
+                if ppixel[0] ~= nil then
+                    local pixel = ppixel[0]
+                    current_material = get_material_id(pixel.vtable.get_material(pixel))
+
+                    if message.material ~= current_material then
+                        remove_cell(grid_world, pixel, x, y, false)
+                    end
+                end
+
+                if current_material ~= message.material and message.material ~= 0 then
+                    if x == top_left_x and y == bottom_right_y - 1 then
+                        print("Changing @ " .. tonumber(x) .. ", " .. tonumber(y) ..
+                              " to " .. CellFactory_GetName(tonumber(message.material)))
+                    end
+
+                    ppixel[0] = construct_cell(
+                        grid_world, x, y, get_material_ptr(message.material), nil)
+                end
+            end
+
+            x = x + 1
+        end
+        y = y + 1
+    end
+end
+
+local receive_top_left_x = nil
+local receive_top_left_y = nil
+local receive_bottom_right_x = nil
+local receive_bottom_right_y = nil
+local partial = ''
+
+function do_receive()
+    while receive_one() do end
+end
+
+function receive_one()
+    if receive_top_left_x == nil then
+        connection:settimeout(0)
+        local received, err, part = connection:receive(4 * 4 - #partial)
+        if received == nil then
+            partial = partial .. part
+            return false
+        end
+
+        received = partial .. received
+        partial = ''
+
+        local header = ffi.cast('const char*', received)
+        local coords = ffi.cast('const int32_t*', header)
+        receive_top_left_x = coords[0]
+        receive_top_left_y = coords[1]
+        receive_bottom_right_x = coords[2]
+        receive_bottom_right_y = coords[3]
+        print(
+            tonumber(receive_top_left_x) .. "," .. tonumber(receive_top_left_y) .. " | " ..
+            tonumber(receive_bottom_right_x) .. "," .. tonumber(receive_bottom_right_y)
+        )
+    end
+
+    local width = receive_bottom_right_x - receive_top_left_x
+    local height = receive_bottom_right_y - receive_top_left_y
+    local size = width * height
+    local data_left = 2 * size - #partial
+
+    local received, err, part = connection:receive(tonumber(data_left))
+    if received == nil then
+        partial = partial .. part
+        return false
+    end
+
+    received = partial .. received
+
+    process_data(
+        receive_top_left_x,
+        receive_top_left_y,
+        receive_bottom_right_x,
+        receive_bottom_right_y,
+        received
+    )
+
+    receive_top_left_x = nil
+    receive_top_left_y = nil
+    receive_bottom_right_x = nil
+    receive_bottom_right_y = nil
+    partial = ''
+
+    return true
+end
+
 function OnWorldPostUpdate()
     if connection == nil then
+        return
+    end
+
+    if os.getenv("ROLE") == "R" then
+        do_receive()
         return
     end
 
@@ -371,6 +521,9 @@ function dump_type_info(typ)
 end
 
 function OnPlayerSpawned(player_entity)
+    if true then
+        return
+    end
     async(function()
         -- Only the changed world data gets sent, which isn't very interesting to look at,
         -- so just send a bunch of data around the player
