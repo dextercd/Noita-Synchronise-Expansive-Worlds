@@ -171,8 +171,27 @@ typedef bool __thiscall chunk_loaded_f(struct ChunkMap*, int x, int y);
 typedef void __thiscall remove_cell_f(struct GridWorld*, void* cell, int x, int y, bool);
 typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y, void* material_ptr, void* memory);
 
-struct __attribute__ ((__packed__)) pixel_message {
-    uint16_t material;
+enum ENCODE_CONST {
+    PIXEL_RUN_MAX = 4096,
+};
+
+struct __attribute__ ((__packed__)) pixel_run {
+    uint16_t length;
+    int16_t material;
+};
+
+struct __attribute__ ((__packed__)) encoded_area_header {
+    int32_t x;
+    int32_t y;
+    uint8_t width;
+    uint8_t height;
+
+    uint16_t pixel_run_count;
+};
+
+struct __attribute__ ((__packed__)) encoded_area {
+    struct encoded_area_header header;
+    struct pixel_run pixel_runs[PIXEL_RUN_MAX];
 };
 
 uint32_t GetCurrentThreadId();
@@ -308,88 +327,140 @@ function OnWorldPreUpdate()
     end
 end
 
-function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
+local encoded_area = ffi.new('struct encoded_area')
+
+function encode_area(chunk_map, start_x, start_y, end_x, end_y)
     start_x = ffi.cast('int32_t', start_x)
     start_y = ffi.cast('int32_t', start_y)
     end_x = ffi.cast('int32_t', end_x)
     end_y = ffi.cast('int32_t', end_y)
 
     local width = end_x - start_x
-    local pixel_count = width * (end_y - start_y)
-    local messages = ffi.new('struct pixel_message[?]', pixel_count)
+    local height = end_y - start_y
 
-    if pixel_count <= 0 then
-        return
+    if width <= 0 or height <= 0 then
+        print("Invalid world part, negative dimension")
+        return nil
     end
 
-    if start_y > end_y then
-        return
+    if width > 256 or height > 256 then
+        print("Invalid world part, dimension greater than 256")
+        return nil
     end
 
-    if start_x > end_x then
-        return
-    end
+    encoded_area.header.x = start_x
+    encoded_area.header.y = start_y
+    encoded_area.header.width = width - 1
+    encoded_area.header.height = height - 1
+
+    local current_run = encoded_area.pixel_runs[0]
+    local current_material = 0
+    local run_length = 0
+    local run_count = 1
 
     local y = start_y
     while y < end_y do
         local x = start_x
         while x < end_x do
             local pixel_index = (y - start_y) * width + (x - start_x)
-            local message = messages[pixel_index]
+
+            local material_number = 0
 
             local ppixel = get_pixel(chunk_map, x, y)
             if ppixel[0] ~= nil then
                 local pixel = ppixel[0]
+
                 --if pixel.vtable.get_cell_type(pixel) ~= C.CELL_TYPE_SOLID then
                     local material_ptr = pixel.vtable.get_material(pixel)
-                    message.material = get_material_id(material_ptr)
+                    material_number = get_material_id(material_ptr)
                 --end
             end
+
+            if x == start_x and y == start_y then
+                -- Initial run
+                current_material = material_number
+            elseif current_material ~= material_number then
+                -- Next run
+                current_run.material = current_material
+                current_run.length = run_length
+
+                if run_count == C.PIXEL_RUN_MAX then
+                    print("Area too complicated to encode")
+                    return nil
+                end
+
+                current_run = encoded_area.pixel_runs[run_count]
+                run_count = run_count + 1
+
+                current_material = material_number
+                run_length = 0
+            end
+
+            run_length = run_length + 1
 
             x = x + 1
         end
         y = y + 1
     end
 
-    if pixel_count > 0 then
-        local send_pc = ffi.new('int32_t[4]', {start_x, start_y, end_x, end_y})
+    current_run.material = current_material
+    current_run.length = run_length
 
-        local str = (
-            ffi.string(send_pc, 4 * 4) ..
-            ffi.string(messages, ffi.sizeof('struct pixel_message') * pixel_count)
-        )
+    encoded_area.header.pixel_run_count = run_count
 
-        local index = 1
-        while index ~= #str do
-            connection:settimeout(nil)
-            local new_index, err, partial_index = connection:send(str, index)
-            if new_index == nil then
-                print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " .. partial_index)
-                print("Error " .. err)
-                index = partial_index
-            else
-                index = new_index
-            end
+    return encoded_area
+end
+
+function send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
+    local area = encode_area(chunk_map, start_x, start_y, end_x, end_y)
+    if area == nil then
+        return
+    end
+
+    local size = (
+        ffi.sizeof("struct encoded_area_header") +
+        area.header.pixel_run_count * ffi.sizeof("struct pixel_run")
+    )
+
+    local str = ffi.string(area, size)
+
+    local index = 1
+    while index ~= #str do
+        connection:settimeout(nil)
+        local new_index, err, partial_index = connection:send(str, index)
+        if new_index == nil then
+            print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " .. partial_index)
+            print("Error " .. err)
+            index = partial_index
+        else
+            index = new_index
         end
     end
 end
 
-function process_data(top_left_x, top_left_y, bottom_right_x, bottom_right_y, received)
-    local buffer = ffi.cast('const char*', received)
-    local messages = ffi.cast('struct pixel_message*', buffer)
+function process_data(header, received)
+    local buffer = ffi.cast('char const*', received)
+    local pixel_runs = ffi.cast('struct pixel_run const*', buffer)
 
     local grid_world = get_grid_world()
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
 
-    local width = bottom_right_x - top_left_x
+    local top_left_x = header.x
+    local top_left_y = header.y
+    local width = header.width + 1
+    local height = header.height + 1
+    local bottom_right_x = top_left_x + width
+    local bottom_right_y = top_left_y + height
+
+    local current_run_ix = 0
+    local current_run = pixel_runs[current_run_ix]
+    local new_material = current_run.material
+    local left = current_run.length
 
     local y = top_left_y
     while y < bottom_right_y do
         local x = top_left_x
         while x < bottom_right_x do
-            local pixel_index = (y - top_left_y) * width + (x - top_left_x)
-            local message = messages[pixel_index]
-
             if chunk_loaded(chunk_map, x, y) then
                 local ppixel = get_pixel(chunk_map, x, y)
                 local current_material = 0
@@ -398,15 +469,23 @@ function process_data(top_left_x, top_left_y, bottom_right_x, bottom_right_y, re
                     local pixel = ppixel[0]
                     current_material = get_material_id(pixel.vtable.get_material(pixel))
 
-                    if message.material ~= current_material then
+                    if new_material ~= current_material then
                         remove_cell(grid_world, pixel, x, y, false)
                     end
                 end
 
-                if current_material ~= message.material and message.material ~= 0 then
+                if current_material ~= new_material and new_material ~= 0 then
                     ppixel[0] = construct_cell(
-                        grid_world, x, y, get_material_ptr(message.material), nil)
+                        grid_world, x, y, get_material_ptr(new_material), nil)
                 end
+            end
+
+            left = left - 1
+            if left <= 0 then
+                current_run_ix = current_run_ix + 1
+                current_run = pixel_runs[current_run_ix]
+                new_material = current_run.material
+                left = current_run.length
             end
 
             x = x + 1
@@ -415,20 +494,19 @@ function process_data(top_left_x, top_left_y, bottom_right_x, bottom_right_y, re
     end
 end
 
-local receive_top_left_x = nil
-local receive_top_left_y = nil
-local receive_bottom_right_x = nil
-local receive_bottom_right_y = nil
-local partial = ''
-
 function do_receive()
     while receive_one() do end
 end
 
+local current_header = nil
+local partial = ''
+
 function receive_one()
-    if receive_top_left_x == nil then
+    if current_header == nil then
         connection:settimeout(0)
-        local received, err, part = connection:receive(4 * 4 - #partial)
+        local received, err, part = connection:receive(
+                ffi.sizeof("struct encoded_area_header") - #partial)
+
         if received == nil then
             partial = partial .. part
             return false
@@ -437,40 +515,25 @@ function receive_one()
         received = partial .. received
         partial = ''
 
-        local header = ffi.cast('const char*', received)
-        local coords = ffi.cast('const int32_t*', header)
-        receive_top_left_x = coords[0]
-        receive_top_left_y = coords[1]
-        receive_bottom_right_x = coords[2]
-        receive_bottom_right_y = coords[3]
+        local header_buffer = ffi.cast('const char*', received)
+        current_header = ffi.cast("struct encoded_area_header const*", header_buffer)
     end
 
-    local width = receive_bottom_right_x - receive_top_left_x
-    local height = receive_bottom_right_y - receive_top_left_y
-    local size = width * height
-    local data_left = 2 * size - #partial
+    local body_size = ffi.sizeof("struct pixel_run") * current_header.pixel_run_count
+    local data_left = body_size - #partial
 
     local received, err, part = connection:receive(tonumber(data_left))
     if received == nil then
         partial = partial .. part
         return false
     end
-
     received = partial .. received
-
-    process_data(
-        receive_top_left_x,
-        receive_top_left_y,
-        receive_bottom_right_x,
-        receive_bottom_right_y,
-        received
-    )
-
-    receive_top_left_x = nil
-    receive_top_left_y = nil
-    receive_bottom_right_x = nil
-    receive_bottom_right_y = nil
     partial = ''
+
+    local header = current_header
+    current_header = nil
+
+    process_data(header, received)
 
     return true
 end
@@ -502,7 +565,14 @@ function OnWorldPostUpdate()
         local end_x = it.update_region.bottom_right.x
         local end_y = it.update_region.bottom_right.y
 
-        send_world_part(chunk_map, connection, start_x - 1, start_y - 1, end_x + 1, end_y + 2)
+        start_x = start_x - 1
+        start_y = start_y - 1
+        end_x = end_x + 1
+        end_y = end_y + 2
+
+        if start_x < end_x and start_y < end_y then
+            send_world_part(chunk_map, connection, start_x, start_y, end_x, end_y)
+        end
     end
 end
 

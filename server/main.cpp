@@ -125,11 +125,11 @@ public:
     }
 };
 
-constexpr int header_size = 4 * 4;
-
 struct header {
     world_coord top_left;
-    world_coord bottom_right;
+    std::uint8_t width;
+    std::uint8_t height;
+    std::uint16_t pixel_run_count;
 
     static constexpr header from_buffer(char const* buffer)
     {
@@ -138,13 +138,14 @@ struct header {
                 nsew::serialise<std::int32_t>::read(buffer),
                 nsew::serialise<std::int32_t>::read(buffer + 4),
             },
-            {
-                nsew::serialise<std::int32_t>::read(buffer + 8),
-                nsew::serialise<std::int32_t>::read(buffer + 12),
-            },
+            nsew::serialise<std::uint8_t>::read(buffer + 8),
+            nsew::serialise<std::uint8_t>::read(buffer + 9),
+            nsew::serialise<std::uint16_t>::read(buffer + 10),
         };
     }
 };
+
+constexpr int header_size = sizeof(header);
 
 class player_session
     : public player
@@ -188,26 +189,16 @@ public:
 
     void do_read_body(header msg_header)
     {
-        auto width = msg_header.bottom_right.x - msg_header.top_left.x;
-        auto height = msg_header.bottom_right.y - msg_header.top_left.y;
-
-        if (width <= 0 || height <= 0) {
-            std::cerr << width << " " << height << '\n';
-            std::abort();
-        }
-
-
-        auto count = (std::size_t)width * (std::size_t)height;
-
         std::cout
             << msg_header.top_left.x << ", " << msg_header.top_left.y << ": "
-            << width << ", " << height << '\n';
+            << (int)msg_header.width << ", " << (int)msg_header.height << '\n';
 
-        receive_buffer.resize(header_size + count * 2);
+        auto const body_size = msg_header.pixel_run_count * 4;
+        receive_buffer.resize(header_size + body_size);
 
         basio::async_read(
             socket,
-            basio::buffer(receive_buffer.data() + header_size, count * 2),
+            basio::buffer(receive_buffer.data() + header_size, body_size),
             [this, self=shared_from_this()](bsys::error_code ec, std::size_t)
             {
                 universe.submit_world_data(self, receive_buffer);
