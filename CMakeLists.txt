@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB_RECURSE LUA_FILES CONFIGURE_DEPENDS
-    "NSEW/*.lua"
+    "nsew/*.lua"
 )
 
 find_program(LUACHECK NAMES luacheck)
@@ -40,8 +40,6 @@ if (LUAFORMATTER)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
-
-install(DIRECTORY NSEW DESTINATION ".")
 
 if (WIN32)
     FetchContent_Declare(LuaSocket
@@ -83,14 +81,16 @@ if (WIN32)
 
     install(
         TARGETS luasocket-socket
-        DESTINATION "NSEW/cdir/socket"
+        DESTINATION "nsew_client/cdir/socket"
+        COMPONENT nsew_client
     )
 
     install(
         FILES
             ${luasocket_SOURCE_DIR}/src/socket.lua
             ${luasocket_SOURCE_DIR}/src/ltn12.lua
-        DESTINATION "NSEW/ldir"
+        DESTINATION "nsew_client/ldir"
+        COMPONENT nsew_client
     )
 
     install(
@@ -100,7 +100,8 @@ if (WIN32)
             ${luasocket_SOURCE_DIR}/src/ftp.lua
             ${luasocket_SOURCE_DIR}/src/smtp.lua
             ${luasocket_SOURCE_DIR}/src/url.lua
-        DESTINATION "NSEW/ldir/socket"
+        DESTINATION "nsew_client/ldir/socket"
+        COMPONENT nsew_client
     )
 
     if (BUILD_TESTING)
@@ -121,5 +122,7 @@ if (NSEW_EXTERNAL_MAP)
     add_subdirectory(external_map)
 endif()
 
+add_subdirectory(nsew)
 add_subdirectory(native)
 add_subdirectory(server)
+add_subdirectory(nsew_client)
