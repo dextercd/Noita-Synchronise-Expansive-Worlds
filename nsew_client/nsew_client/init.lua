@@ -48,10 +48,7 @@ end
 
 function left_pressed()
     local control = EntityGetFirstComponent(get_player(), "ControlsComponent")
-    return (
-        ComponentGetValue2(control, "mButtonDownFire") and
-        ComponentGetValue2(control, "mButtonDownFire2")
-    )
+    return (ComponentGetValue2(control, "mButtonDownFire") and ComponentGetValue2(control, "mButtonDownFire2"))
 end
 
 function right_pressed()
@@ -78,7 +75,8 @@ function send_world_part(chunk_map, start_x, start_y, end_x, end_y)
         connection:settimeout(nil)
         local new_index, err, partial_index = connection:send(str, index)
         if new_index == nil then
-            print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " .. partial_index)
+            print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " ..
+                      partial_index)
             print("Error " .. err)
             index = partial_index
         else
@@ -99,8 +97,7 @@ local partial = ''
 function receive_one()
     if current_header == nil then
         connection:settimeout(0)
-        local received, err, part = connection:receive(
-                ffi.sizeof(world.EncodedAreaHeader) - #partial)
+        local received, err, part = connection:receive(ffi.sizeof(world.EncodedAreaHeader) - #partial)
 
         if received == nil then
             partial = partial .. part
@@ -112,9 +109,7 @@ function receive_one()
 
         header_buffer = received
 
-        current_header = ffi.cast(
-            "struct EncodedAreaHeader const*",
-            ffi.cast('char const*', header_buffer))
+        current_header = ffi.cast("struct EncodedAreaHeader const*", ffi.cast('char const*', header_buffer))
     end
 
     local body_size = ffi.sizeof(world.PixelRun) * current_header.pixel_run_count
@@ -157,7 +152,7 @@ function OnWorldPostUpdate()
 
     local count = thread_impl.chunk_update_count
 
-    for i=0, count - 1 do
+    for i = 0, count - 1 do
         local it = begin[i]
 
         local start_x = it.update_region.top_left.x
@@ -190,8 +185,8 @@ function OnPlayerSpawned(player_entity)
         local grid_world = noita_ffi.get_grid_world()
         local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
 
-        for y=-2048,2048,64 do
-            for x=-2048,2048,64 do
+        for y = -2048, 2048, 64 do
+            for x = -2048, 2048, 64 do
                 send_world_part(chunk_map, x, y, x + 64, y + 64)
             end
         end
