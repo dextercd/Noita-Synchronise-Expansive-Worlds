@@ -53,7 +53,6 @@ struct Cell_vtable {
     void* field10_0x28;
     void* field11_0x2c;
     void* (__thiscall *get_material)(void *);
-    void* gm;
     void* field13_0x34;
     void* field14_0x38;
     void* field15_0x3c;
@@ -61,8 +60,7 @@ struct Cell_vtable {
     void* field17_0x44;
     void* field18_0x48;
     void* field19_0x4c;
-    //position * (* get_position)(void *, struct position *);
-    void* gp;
+    position * (__thiscall *get_position)(void *, struct position *);
     void* field21_0x54;
     void* field22_0x58;
     void* field23_0x5c;
