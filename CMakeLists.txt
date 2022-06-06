@@ -12,6 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB_RECURSE LUA_FILES CONFIGURE_DEPENDS
     "nsew/*.lua"
+    "nsew_client/nsew_client/*.lua"
 )
 
 find_program(LUACHECK NAMES luacheck)

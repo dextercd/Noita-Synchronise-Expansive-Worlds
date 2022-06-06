@@ -13,13 +13,10 @@ local world = require("nsew.world")
 
 dofile("data/scripts/lib/coroutines.lua")
 
-local C = ffi.C
-
-
 ModMagicNumbersFileAdd("mods/nsew_client/files/magic_numbers.xml")
 
 local master = socket.tcp()
-local connect_res = assert(master:connect('127.0.0.1', 44174))
+assert(master:connect('127.0.0.1', 44174))
 local connection = master
 
 function set_colour(grid_world, x, y, col)
@@ -37,12 +34,7 @@ function set_colour(grid_world, x, y, col)
     -- use in this code here type-puns it to a little endian integer. Reorder
     -- the bytes so the colour is correct
     col = bit.rshift(bit.bswap(col), 8)
-
     ppixel[0].colour = bit.bor(bit.band(ppixel[0].colour, 0xff000000), col)
-    -- ppixel[0].material_ptr = get_material_ptr(124)
-    -- ppixel[0].meh2 = 0x1
-
-    -- print(ppixel[0].material_ptr)
 end
 
 function get_player()
@@ -96,7 +88,8 @@ function send_world_part(chunk_map, start_x, start_y, end_x, end_y)
 end
 
 function do_receive()
-    while receive_one() do end
+    while receive_one() do
+    end
 end
 
 local header_buffer = nil
@@ -118,7 +111,7 @@ function receive_one()
         partial = ''
 
         header_buffer = received
-        
+
         current_header = ffi.cast(
             "struct EncodedAreaHeader const*",
             ffi.cast('char const*', header_buffer))
