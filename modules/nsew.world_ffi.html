@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>NSEW</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/nsew.world.html">nsew.world</a></li>
+  <li><strong>nsew.world_ffi</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>nsew.world_ffi</code></h1>
+<p>Noita world functionality exposed.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_cell">get_cell (chunk_map, x, y)</a></td>
+	<td class="summary">Access a pixel in the world.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_cell">remove_cell (grid_world, cell, x, y, noidea)</a></td>
+	<td class="summary">Remove a cell from the world.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#construct_cell">construct_cell (grid_world, x, y, material_ptr, pointer)</a></td>
+	<td class="summary">Create a new cell.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#chunk_loaded">chunk_loaded (chunk_map, x, y)</a></td>
+	<td class="summary">Check if a chunk is loaded.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_grid_world">get_grid_world ()</a></td>
+	<td class="summary">Get the grid world.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_material_ptr">get_material_ptr (id)</a></td>
+	<td class="summary">Turn a standard material id into a material pointer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_material_id">get_material_id (ptr)</a></td>
+	<td class="summary">Turn a material pointer into a standard material id.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "get_cell"></a>
+    <strong>get_cell (chunk_map, x, y)</strong>
+    </dt>
+    <dd>
+    Access a pixel in the world.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chunk_map</span>
+         chunk map
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">int</span></span>
+         coordinate
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         coordinate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Pointer to a pointer to a cell. You can write a cell created from
+ <a href="../modules/nsew.world_ffi.html#construct_cell">construct_cell</a> to this pointer to add a cell into the world. If there's
+ already a cell at this position, make sure to call <a href="../modules/nsew.world_ffi.html#remove_cell">remove_cell</a> first.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_cell"></a>
+    <strong>remove_cell (grid_world, cell, x, y, noidea)</strong>
+    </dt>
+    <dd>
+    Remove a cell from the world.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">grid_world</span>
+
+
+
+        </li>
+        <li><span class="parameter">cell</span>
+         pointer to the cell you want to remove
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">int</span></span>
+         coordinate
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         coordinate
+        </li>
+        <li><span class="parameter">noidea</span>
+            <span class="types"><span class="type">bool</span></span>
+         no idea
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "construct_cell"></a>
+    <strong>construct_cell (grid_world, x, y, material_ptr, pointer)</strong>
+    </dt>
+    <dd>
+    Create a new cell.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">grid_world</span>
+
+
+
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">int</span></span>
+         coordinate
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         coordinate
+        </li>
+        <li><span class="parameter">material_ptr</span>
+         pointer to material
+        </li>
+        <li><span class="parameter">pointer</span>
+         to memory to use. nullptr will make this function allocate its
+ own memory
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "chunk_loaded"></a>
+    <strong>chunk_loaded (chunk_map, x, y)</strong>
+    </dt>
+    <dd>
+    Check if a chunk is loaded.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chunk_map</span>
+
+
+
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">int</span></span>
+         world coordinate
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         world coordinate
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> world_ffi.chunk_loaded(chunk_map, x, y) <span class="keyword">then</span>
+  <span class="keyword">local</span> cell = world_ffi.get_cell(chunk_map, x, y)
+  <span class="comment">-- ...</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "get_grid_world"></a>
+    <strong>get_grid_world ()</strong>
+    </dt>
+    <dd>
+    Get the grid world.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        pointer to the grid world
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_material_ptr"></a>
+    <strong>get_material_ptr (id)</strong>
+    </dt>
+    <dd>
+    Turn a standard material id into a material pointer.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">id</span>
+         material id that is used in the standard Noita functions
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        pointer to internal material data (aka cell data).
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> gold_ptr = world_ffi.get_material_ptr(CellFactory_GetType(<span class="string">"gold"</span>))</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "get_material_id"></a>
+    <strong>get_material_id (ptr)</strong>
+    </dt>
+    <dd>
+    Turn a material pointer into a standard material id.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ptr</span>
+         pointer to a material (aka cell data)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        material id that is accepted by standard Noita functions such as
+ <code>CellFactory_GetUIName</code> and <code>ConvertMaterialOnAreaInstantly</code>.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/nsew.world_ffi.html#get_material_ptr">get_material_ptr</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> mat_id = world_ffi.get_material_id(cell.vtable.get_material(cell))</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-06-09 20:41:22 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
