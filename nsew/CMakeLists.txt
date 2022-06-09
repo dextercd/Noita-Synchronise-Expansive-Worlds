@@ -3,7 +3,7 @@ set(NSEW_BUILD "${NSEW_BUILD}" PARENT_SCOPE)
 
 file(MAKE_DIRECTORY "${NSEW_BUILD}")
 
-configure_file(noita_ffi.lua "${NSEW_BUILD}" COPYONLY)
+configure_file(world_ffi.lua "${NSEW_BUILD}" COPYONLY)
 configure_file(world.lua "${NSEW_BUILD}" COPYONLY)
 
 install(DIRECTORY "${NSEW_BUILD}"

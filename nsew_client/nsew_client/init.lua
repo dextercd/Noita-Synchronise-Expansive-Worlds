@@ -8,7 +8,7 @@ package.path = package.path .. ";.\\mods\\nsew_client\\deps\\?.lua"
 local ffi = require("ffi")
 local socket = require("socket")
 
-local noita_ffi = require("nsew.noita_ffi")
+local world_ffi = require("nsew.world_ffi")
 local world = require("nsew.world")
 
 dofile("data/scripts/lib/coroutines.lua")
@@ -21,7 +21,7 @@ local connection = master
 
 function set_colour(grid_world, x, y, col)
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
-    local ppixel = noita_ffi.get_pixel(chunk_map, x, y)
+    local ppixel = world_ffi.get_pixel(chunk_map, x, y)
     if ppixel[0] == nil then
         return
     end
@@ -127,7 +127,7 @@ function receive_one()
     current_header = nil
     header_buffer = nil
 
-    local grid_world = noita_ffi.get_grid_world()
+    local grid_world = world_ffi.get_grid_world()
     world.decode(grid_world, header, received)
 
     return true
@@ -143,7 +143,7 @@ function OnWorldPostUpdate()
         return
     end
 
-    local grid_world = noita_ffi.get_grid_world()
+    local grid_world = world_ffi.get_grid_world()
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
     local thread_impl = grid_world.mThreadImpl
 
@@ -182,7 +182,7 @@ function OnPlayerSpawned(player_entity)
         -- Ensure chunks are loaded around the player
         wait(60)
 
-        local grid_world = noita_ffi.get_grid_world()
+        local grid_world = world_ffi.get_grid_world()
         local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
 
         for y = -2048, 2048, 64 do

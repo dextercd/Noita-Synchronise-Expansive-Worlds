@@ -3,7 +3,7 @@
 local world = {}
 
 local ffi = require("ffi")
-local noita_ffi = require("nsew.noita_ffi")
+local world_ffi = require("nsew.world_ffi")
 
 local C = ffi.C
 
@@ -96,13 +96,13 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
         while x < end_x do
             local material_number = 0
 
-            local ppixel = noita_ffi.get_pixel(chunk_map, x, y)
+            local ppixel = world_ffi.get_pixel(chunk_map, x, y)
             if ppixel[0] ~= nil then
                 local pixel = ppixel[0]
 
                 -- if pixel.vtable.get_cell_type(pixel) ~= C.CELL_TYPE_SOLID then
                 local material_ptr = pixel.vtable.get_material(pixel)
-                material_number = noita_ffi.get_material_id(material_ptr)
+                material_number = world_ffi.get_material_id(material_ptr)
                 -- end
             end
 
@@ -170,22 +170,22 @@ function world.decode(grid_world, header, received)
     while y < bottom_right_y do
         local x = top_left_x
         while x < bottom_right_x do
-            if noita_ffi.chunk_loaded(chunk_map, x, y) then
-                local ppixel = noita_ffi.get_pixel(chunk_map, x, y)
+            if world_ffi.chunk_loaded(chunk_map, x, y) then
+                local ppixel = world_ffi.get_pixel(chunk_map, x, y)
                 local current_material = 0
 
                 if ppixel[0] ~= nil then
                     local pixel = ppixel[0]
-                    current_material = noita_ffi.get_material_id(pixel.vtable.get_material(pixel))
+                    current_material = world_ffi.get_material_id(pixel.vtable.get_material(pixel))
 
                     if new_material ~= current_material then
-                        noita_ffi.remove_cell(grid_world, pixel, x, y, false)
+                        world_ffi.remove_cell(grid_world, pixel, x, y, false)
                     end
                 end
 
                 if current_material ~= new_material and new_material ~= 0 then
                     ppixel[0] =
-                        noita_ffi.construct_cell(grid_world, x, y, noita_ffi.get_material_ptr(new_material), nil)
+                        world_ffi.construct_cell(grid_world, x, y, world_ffi.get_material_ptr(new_material), nil)
                 end
             end
 
