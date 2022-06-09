@@ -163,7 +163,7 @@ struct GridWorldThreadImpl {
     int last_vec[3];
 };
 
-typedef struct Cell** __thiscall get_pixel_f(struct ChunkMap*, int x, int y);
+typedef struct Cell** __thiscall get_cell_f(struct ChunkMap*, int x, int y);
 typedef bool __thiscall chunk_loaded_f(struct ChunkMap*, int x, int y);
 
 typedef void __thiscall remove_cell_f(struct GridWorld*, void* cell, int x, int y, bool);
@@ -172,14 +172,14 @@ typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y
 ]])
 
 --- Access a pixel in the world.
--- @function get_pixel
+-- @function get_cell
 -- @param chunk_map chunk map
 -- @tparam int x coordinate
 -- @tparam int y coordinate
 -- @return Pointer to a pointer to a cell. You can write a cell created from
 -- @{construct_cell} to this pointer to add a cell into the world. If there's
 -- already a cell at this position, make sure to call @{remove_cell} first.
-world_ffi.get_pixel = ffi.cast("get_pixel_f*", 0x07bf560)
+world_ffi.get_cell = ffi.cast("get_cell_f*", 0x07bf560)
 
 --- Remove a cell from the world.
 -- @function remove_cell
@@ -207,7 +207,7 @@ world_ffi.construct_cell = ffi.cast("construct_cell_f*", 0x691b70)
 -- @tparam int y world coordinate
 -- @usage
 -- if world_ffi.chunk_loaded(chunk_map, x, y) then
---   local cell = world_ffi.get_pixel(chunk_map, x, y)
+--   local cell = world_ffi.get_cell(chunk_map, x, y)
 --   -- ...
 world_ffi.chunk_loaded = ffi.cast("chunk_loaded_f*", 0x7bf440)
 

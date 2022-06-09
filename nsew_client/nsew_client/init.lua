@@ -21,7 +21,7 @@ local connection = master
 
 function set_colour(grid_world, x, y, col)
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
-    local ppixel = world_ffi.get_pixel(chunk_map, x, y)
+    local ppixel = world_ffi.get_cell(chunk_map, x, y)
     if ppixel[0] == nil then
         return
     end

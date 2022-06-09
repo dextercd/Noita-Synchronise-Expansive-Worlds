@@ -96,7 +96,7 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
         while x < end_x do
             local material_number = 0
 
-            local ppixel = world_ffi.get_pixel(chunk_map, x, y)
+            local ppixel = world_ffi.get_cell(chunk_map, x, y)
             if ppixel[0] ~= nil then
                 local pixel = ppixel[0]
 
@@ -171,7 +171,7 @@ function world.decode(grid_world, header, received)
         local x = top_left_x
         while x < bottom_right_x do
             if world_ffi.chunk_loaded(chunk_map, x, y) then
-                local ppixel = world_ffi.get_pixel(chunk_map, x, y)
+                local ppixel = world_ffi.get_cell(chunk_map, x, y)
                 local current_material = 0
 
                 if ppixel[0] ~= nil then
