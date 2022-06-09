@@ -1,3 +1,5 @@
+--- World read / write functionality.
+-- @module nsew.world
 local world = {}
 
 local ffi = require("ffi")
@@ -36,10 +38,27 @@ world.EncodedAreaHeader = ffi.typeof("struct EncodedAreaHeader")
 world.PixelRun = ffi.typeof("struct PixelRun")
 world.EncodedArea = ffi.typeof("struct EncodedArea")
 
+--- Total bytes taken up by the encoded area
+-- @tparam EncodedArea encoded_area
+-- @treturn int total number of bytes that encodes the area
+-- @usage
+-- local data = ffi.string(area, world.encoded_size(area))
+-- peer:send(data)
 function world.encoded_size(encoded_area)
     return (ffi.sizeof(world.EncodedAreaHeader) + encoded_area.header.pixel_run_count * ffi.sizeof(world.PixelRun))
 end
 
+--- Encode the given rectangle of the world
+-- The rectangle defined by {`start_x`, `start_y`, `end_x`, `end_y`} must not
+-- exceed 256 in width or height.
+-- @param chunk_map
+-- @tparam int start_x coordinate
+-- @tparam int start_y coordinate
+-- @tparam int end_x coordinate
+-- @tparam int end_y coordinate
+-- @tparam EncodedArea encoded_area memory to use, if nil this function allocates its own memory
+-- @return returns an EncodedArea or nil if the area could not be encoded
+-- @see decode
 function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_area)
     start_x = ffi.cast('int32_t', start_x)
     start_y = ffi.cast('int32_t', start_y)
@@ -124,6 +143,11 @@ end
 
 local PixelRun_const_ptr = ffi.typeof("struct PixelRun const*")
 
+--- Load an encoded area back into the world.
+-- @param grid_world
+-- @tparam EncodedAreaHeader header header of the encoded area
+-- @tparam string received string that contains the pixel runs of the encoded area
+-- @see encode_area
 function world.decode(grid_world, header, received)
     local buffer = ffi.cast('char const*', received)
     local pixel_runs = ffi.cast(PixelRun_const_ptr, buffer)

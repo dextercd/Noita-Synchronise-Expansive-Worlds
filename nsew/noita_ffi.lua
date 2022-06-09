@@ -1,3 +1,6 @@
+--- Noita world functionality exposed.
+-- @module nsew.noita_ffi
+
 local noita_ffi = {}
 
 local ffi = require("ffi")
@@ -168,9 +171,44 @@ typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y
 
 ]])
 
+--- Access a pixel in the world.
+-- @function get_pixel
+-- @param chunk_map chunk map
+-- @tparam int x coordinate
+-- @tparam int y coordinate
+-- @return Pointer to a pointer to a cell. You can write a cell created from
+-- @{construct_cell} to this pointer to add a cell into the world. If there's
+-- already a cell at this position, make sure to call @{remove_cell} first.
 noita_ffi.get_pixel = ffi.cast("get_pixel_f*", 0x07bf560)
+
+--- Remove a cell from the world.
+-- @function remove_cell
+-- @param grid_world
+-- @param cell pointer to the cell you want to remove
+-- @tparam int x coordinate
+-- @tparam int y coordinate
+-- @tparam bool noidea no idea
 noita_ffi.remove_cell = ffi.cast("remove_cell_f*", 0x6a83c0)
+
+--- Create a new cell.
+-- @function construct_cell
+-- @param grid_world
+-- @tparam int x coordinate
+-- @tparam int y coordinate
+-- @param material_ptr pointer to material
+-- @param pointer to memory to use. nullptr will make this function allocate its
+-- own memory
 noita_ffi.construct_cell = ffi.cast("construct_cell_f*", 0x691b70)
+
+--- Check if a chunk is loaded.
+-- @function chunk_loaded
+-- @param chunk_map
+-- @tparam int x world coordinate
+-- @tparam int y world coordinate
+-- @usage
+-- if noita_ffi.chunk_loaded(chunk_map, x, y) then
+--   local cell = noita_ffi.get_pixel(chunk_map, x, y)
+--   -- ...
 noita_ffi.chunk_loaded = ffi.cast("chunk_loaded_f*", 0x7bf440)
 
 noita_ffi.Position = ffi.typeof("struct Position")
@@ -185,6 +223,8 @@ noita_ffi.GridWorldThreaded = ffi.typeof("struct GridWorldThreaded")
 noita_ffi.WorldUpdateParams = ffi.typeof("struct WorldUpdateParams")
 noita_ffi.GridWorldThreadImpl = ffi.typeof("struct GridWorldThreadImpl")
 
+--- Get the grid world.
+-- @return pointer to the grid world
 function noita_ffi.get_grid_world()
     local game_global = ffi.cast("void**", 0x100d558)[0]
     local world_data = ffi.cast("void**", ffi.cast("char*", game_global) + 0xc)[0]
@@ -193,6 +233,11 @@ function noita_ffi.get_grid_world()
 end
 
 local material_props_size = 0x28c
+
+--- Turn a standard material id into a material pointer.
+-- @param id material id that is used in the standard Noita functions
+-- @return pointer to internal material data (aka cell data).
+-- @usage local gold_ptr = noita_ffi.get_material_ptr(CellFactory_GetType("gold"))
 function noita_ffi.get_material_ptr(id)
     local game_global = ffi.cast("char**", 0x100d558)[0]
     local cell_factory = ffi.cast('char**', (game_global + 0x18))[0]
@@ -201,6 +246,12 @@ function noita_ffi.get_material_ptr(id)
     return ptr
 end
 
+--- Turn a material pointer into a standard material id.
+-- @param ptr pointer to a material (aka cell data)
+-- @treturn int material id that is accepted by standard Noita functions such as
+-- `CellFactory_GetUIName` and `ConvertMaterialOnAreaInstantly`.
+-- @usage local mat_id = noita_ffi.get_material_id(cell.vtable.get_material(cell))
+-- @see get_material_ptr
 function noita_ffi.get_material_id(ptr)
     local game_global = ffi.cast("char**", 0x100d558)[0]
     local cell_factory = ffi.cast('char**', (game_global + 0x18))[0]
