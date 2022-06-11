@@ -4,7 +4,7 @@ set(NSEW_BUILD "${NSEW_BUILD}" PARENT_SCOPE)
 file(MAKE_DIRECTORY "${NSEW_BUILD}")
 
 set(SOURCES
-    load.lua  world_ffi.lua  world.lua
+    game_patch.lua  load.lua  native_dll.lua  world_ffi.lua  world.lua
 )
 
 foreach(source IN LISTS SOURCES)

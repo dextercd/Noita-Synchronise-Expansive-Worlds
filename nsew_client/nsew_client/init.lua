@@ -11,6 +11,9 @@ dofile_once("mods/nsew_client/deps/nsew/load.lua")("mods/nsew_client/deps")
 local world_ffi = require("nsew.world_ffi")
 local world = require("nsew.world")
 
+local game_patch = require("nsew.game_patch")
+game_patch.disable_game_pause()
+
 dofile("data/scripts/lib/coroutines.lua")
 
 ModMagicNumbersFileAdd("mods/nsew_client/files/magic_numbers.xml")
