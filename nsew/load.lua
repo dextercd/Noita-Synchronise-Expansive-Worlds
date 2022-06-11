@@ -8,8 +8,6 @@
 
 __nsew_path = nil
 
-local load = {}
-
 --- Setup the environment for `require`-ing NSEW modules.
 -- The usage example shows how you would use this file for the following Noita
 -- mod structure:
@@ -37,9 +35,9 @@ local load = {}
 --
 -- local world = require("nsew.world")
 -- -- ...
-function load.do_load(path)
+function do_load(path)
     __nsew_path = path .. "/nsew/"
     package.path = package.path .. ";" .. path .. "/?.lua"
 end
 
-return load
+return do_load
