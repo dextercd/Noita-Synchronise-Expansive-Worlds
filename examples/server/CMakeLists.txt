@@ -22,3 +22,8 @@ target_link_libraries(nsew_server
         absl::hash absl::flat_hash_map
         nsew_common
 )
+
+install(TARGETS nsew_server
+    DESTINATION "examples/server"
+    COMPONENT NSEW_Server
+)

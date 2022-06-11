@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(nsew)
+project(nsew
+    VERSION 0.0.1
+    DESCRIPTION "Noita mod library with advanced utilities"
+    HOMEPAGE_URL "https://github.com/dextercd/Noita-Synchronise-Expansive-Worlds"
+    LANGUAGES C CXX
+)
 
-include(CTest)
 include(FetchContent)
 
 option(NSEW_EXTERNAL_MAP "Build external map executable" ON)
+option(NSEW_INCLUDE_EXAMPLE ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -16,7 +21,7 @@ set(CXX_VISIBILITY_PRESET hidden)
 
 file(GLOB_RECURSE LUA_FILES CONFIGURE_DEPENDS
     "nsew/*.lua"
-    "nsew_client/nsew_client/*.lua"
+    "examples/nsew_client/*.lua"
 )
 
 find_program(LUACHECK NAMES luacheck)
@@ -44,6 +49,28 @@ if (LUAFORMATTER)
         COMMAND ${LUAFORMATTER} --check -- ${LUA_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
+endif()
+
+if (NSEW_PREBUILT_DOCS_DIR)
+    install(DIRECTORY ${NSEW_PREBUILT_DOCS_DIR}/
+        DESTINATION docs
+        COMPONENT NSEW_Docs
+    )
+else()
+    find_program(LDOC NAMES ldoc)
+    if (LDOC)
+        add_custom_target(nsew_docs
+            VERBATIM
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${LDOC}
+                --dir ${CMAKE_CURRENT_BINARY_DIR}/docs
+                .
+        )
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs/
+            DESTINATION docs
+            COMPONENT NSEW_Docs
+        )
+    endif()
 endif()
 
 if (WIN32)
@@ -86,16 +113,16 @@ if (WIN32)
 
     install(
         TARGETS luasocket-socket
-        DESTINATION "nsew_client/cdir/socket"
-        COMPONENT nsew_client
+        DESTINATION "examples/nsew_client/cdir/socket"
+        COMPONENT NSEW_Client
     )
 
     install(
         FILES
             ${luasocket_SOURCE_DIR}/src/socket.lua
             ${luasocket_SOURCE_DIR}/src/ltn12.lua
-        DESTINATION "nsew_client/ldir"
-        COMPONENT nsew_client
+        DESTINATION "examples/nsew_client/ldir"
+        COMPONENT NSEW_Client
     )
 
     install(
@@ -105,8 +132,8 @@ if (WIN32)
             ${luasocket_SOURCE_DIR}/src/ftp.lua
             ${luasocket_SOURCE_DIR}/src/smtp.lua
             ${luasocket_SOURCE_DIR}/src/url.lua
-        DESTINATION "nsew_client/ldir/socket"
-        COMPONENT nsew_client
+        DESTINATION "examples/nsew_client/ldir/socket"
+        COMPONENT NSEW_Client
     )
 
     if (BUILD_TESTING)
@@ -129,5 +156,6 @@ endif()
 
 add_subdirectory(nsew)
 add_subdirectory(native)
-add_subdirectory(server)
-add_subdirectory(nsew_client)
+add_subdirectory(examples)
+
+add_subdirectory(packaging)
