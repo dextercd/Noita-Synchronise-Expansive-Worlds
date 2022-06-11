@@ -5,3 +5,4 @@ file = {
 }
 
 format = "markdown"
+not_luadoc = true

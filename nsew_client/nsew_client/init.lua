@@ -2,11 +2,11 @@
 package.path = package.path .. ";.\\mods\\nsew_client\\ldir\\?.lua"
 package.cpath = package.cpath .. ";.\\mods\\nsew_client\\cdir\\?.dll"
 
--- NSEW
-package.path = package.path .. ";.\\mods\\nsew_client\\deps\\?.lua"
-
 local ffi = require("ffi")
 local socket = require("socket")
+
+-- NSEW
+dofile_once("mods/nsew_client/deps/nsew/load.lua")("mods/nsew_client/deps")
 
 local world_ffi = require("nsew.world_ffi")
 local world = require("nsew.world")

@@ -3,8 +3,13 @@ set(NSEW_BUILD "${NSEW_BUILD}" PARENT_SCOPE)
 
 file(MAKE_DIRECTORY "${NSEW_BUILD}")
 
-configure_file(world_ffi.lua "${NSEW_BUILD}" COPYONLY)
-configure_file(world.lua "${NSEW_BUILD}" COPYONLY)
+set(SOURCES
+    load.lua  world_ffi.lua  world.lua
+)
+
+foreach(source IN LISTS SOURCES)
+    configure_file(${source} "${NSEW_BUILD}" COPYONLY)
+endforeach()
 
 install(DIRECTORY "${NSEW_BUILD}"
     DESTINATION "."
