@@ -10,3 +10,17 @@ install(DIRECTORY "${NSEW_BUILD}"
     DESTINATION "."
     COMPONENT nsew_lib
 )
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${NSEW_BUILD}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${NSEW_BUILD}")
+
+
+if (WIN32)
+    add_library(nsew_native MODULE
+        game_pause_patch.cpp
+    )
+
+    include(GenerateExportHeader)
+    generate_export_header(nsew_native)
+    target_include_directories(nsew_native PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+endif()

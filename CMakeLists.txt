@@ -10,6 +10,10 @@ option(NSEW_EXTERNAL_MAP "Build external map executable" ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(VISIBILITY_INLINES_HIDDEN ON)
+set(C_VISIBILITY_PRESET hidden)
+set(CXX_VISIBILITY_PRESET hidden)
+
 file(GLOB_RECURSE LUA_FILES CONFIGURE_DEPENDS
     "nsew/*.lua"
     "nsew_client/nsew_client/*.lua"
