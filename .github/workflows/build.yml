@@ -1,0 +1,103 @@
+on: push
+
+permissions:
+  contents: write
+
+jobs:
+  ldoc:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y luarocks
+          sudo luarocks install ldoc
+
+      - name: Create docs
+        run: ldoc .
+
+      - name: Upload LDoc artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: doc
+          retention-days: 2
+
+  build:
+    needs: ldoc
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: docs
+          path: doc
+
+      - name: Get build dependencies
+        run: |
+          C:/vcpkg/vcpkg install boost-system:x86-windows-static
+          C:/vcpkg/vcpkg install boost-asio:x86-windows-static
+
+      - name: Get LuaJIT
+        run: |
+          Invoke-WebRequest https://luajit.org/download/LuaJIT-2.0.4.zip -OutFile LuaJIT.zip
+          Expand-Archive ./LuaJIT.zip
+
+      - name: Build LuaJIT
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14.32
+          cd LuaJIT\LuaJIT-2.0.4\src
+          msvcbuild
+
+      - name: Create build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14.32
+          mkdir build
+          cmake -S . -B build -G Ninja ^
+            -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ^
+            -DVCPKG_TARGET_TRIPLET=x86-windows-static ^
+            -DCMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0601 /DWINVER=0x0601 /DWIN32 /D_WINDOWS /EHsc /MD" ^
+            -DNSEW_EXTERNAL_MAP=OFF ^
+            -DLUAJIT_COMPILED=D:/a/Noita-Synchronise-Expansive-Worlds/Noita-Synchronise-Expansive-Worlds/LuaJIT/LuaJIT-2.0.4 ^
+            -DNSEW_PREBUILT_DOCS_DIR=D:/a/Noita-Synchronise-Expansive-Worlds/Noita-Synchronise-Expansive-Worlds/doc ^
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Run build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14.32
+          cmake --build build
+
+      - name: Run CTest
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14.32
+          cd build
+          ctest
+
+      - name: Run CPack
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14.32
+          cd build
+          cpack
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: package
+          path: build/nsew*.zip
+          retention-days: 2
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/release-')
+        with:
+          files: |
+            build/nsew*.zip
