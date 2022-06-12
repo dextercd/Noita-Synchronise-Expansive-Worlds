@@ -7,10 +7,11 @@ project(nsew
     LANGUAGES C CXX
 )
 
+include(CTest)
 include(FetchContent)
 
 option(NSEW_EXTERNAL_MAP "Build external map executable" ON)
-option(NSEW_INCLUDE_EXAMPLE ON)
+option(NSEW_INCLUDE_EXAMPLE "Package examples" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
