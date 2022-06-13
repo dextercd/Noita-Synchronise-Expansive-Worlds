@@ -17,6 +17,17 @@ namespace nsew {
 // + |
 //   v
 
+struct coord {
+    std::int32_t x;
+    std::int32_t y;
+};
+
+constexpr coord translated_by(coord p, coord o) {
+    return {
+        p.x + o.x, p.y + o.y
+    };
+}
+
 struct rectangle {
     std::int32_t left;
     std::int32_t top;
@@ -25,6 +36,15 @@ struct rectangle {
 
     bool operator==(rectangle const&) const = default;
 };
+
+constexpr rectangle translated_by(rectangle r, coord o) {
+    return {
+        r.left + o.x,
+        r.top + o.y,
+        r.right + o.x,
+        r.bottom + o.y,
+    };
+}
 
 constexpr bool has_area(rectangle r) {
     return (

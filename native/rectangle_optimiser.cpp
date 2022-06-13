@@ -41,7 +41,7 @@ bool edge_position_order(edge a, edge b)
 
 void sweep_alg::next(const std::vector<range>& ranges, int position)
 {
-    auto unconsidered_range = ranges.begin();
+    auto unconsidered_range = std::begin(ranges);
 
     for (auto segment_it = std::begin(segments); segment_it != std::end(segments);) {
         auto this_segment = *segment_it;
@@ -49,7 +49,7 @@ void sweep_alg::next(const std::vector<range>& ranges, int position)
         // First range where the end is >= this segment's start
         auto first_potential_intersect =
             std::partition_point(
-                std::begin(ranges),
+                unconsidered_range,
                 std::end(ranges),
                 [&](auto r) { return r.stop < this_segment.start; }
             );
@@ -62,11 +62,7 @@ void sweep_alg::next(const std::vector<range>& ranges, int position)
             segments.insert({position, range.start, range.stop});
         }
 
-        if (first_potential_intersect != std::end(ranges)) {
-            unconsidered_range = std::next(first_potential_intersect);
-        }
-
-        // Iterators invalidated by previous insert
+        // Iterator was invalidated by previous insert
         if (iterator_invalidated)
             segment_it = segments.find(this_segment);
 
@@ -95,7 +91,7 @@ void sweep_alg::next(const std::vector<range>& ranges, int position)
         // intersect with this range.
         auto erase_end = segment_it;
         for (; erase_end != std::end(segments); ++erase_end) {
-            if (erase_end->start > range.stop)
+            if (erase_end->start > range.stop || erase_end->start == range.start && erase_end->stop == range.stop)
                 break;
 
             auto segment = *erase_end;
@@ -105,15 +101,13 @@ void sweep_alg::next(const std::vector<range>& ranges, int position)
                 position,
                 segment.stop,
             });
+
+            // ++erase_end;
+            // break;
+
         }
 
-        segments.erase(segment_it, erase_end);
-
-        // Add this range as a new segment
-        auto [new_it, inserted] = segments.insert({position, range.start, range.stop});
-        assert(inserted);
-
-        segment_it = ++new_it;
+        segment_it = segments.erase(segment_it, erase_end);
     }
 
     // Any ranges we skipped we must add as a new segment

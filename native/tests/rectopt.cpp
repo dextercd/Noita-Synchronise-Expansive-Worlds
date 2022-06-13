@@ -2,10 +2,10 @@
 #include <random>
 #include <stdexcept>
 #include <algorithm>
+#include <array>
+#include <fstream>
 
 #include <nsew/rectangle_optimiser.hpp>
-
-std::mt19937 random_gen;
 
 std::ostream& operator<<(std::ostream& os, nsew::rectangle rect)
 {
@@ -13,6 +13,61 @@ std::ostream& operator<<(std::ostream& os, nsew::rectangle rect)
         << "{" << rect.left << "," << rect.top << ","
         << rect.right << "," << rect.bottom << "}";
 }
+
+
+void start_svg(std::ostream& os)
+{
+    os << R"(
+    <svg version="1.1"
+     width="5000" height="4000"
+     xmlns="http://www.w3.org/2000/svg">
+    )";
+}
+
+void end_svg(std::ostream& os)
+{
+    os << "</svg>";
+}
+
+void write_line(std::ostream& os, int x, int y, int x2, int y2)
+{
+    os
+        << "<line x1=\"" << x
+        << "\" y1=\"" << y
+        <<"\" x2=\"" << x2
+        << "\" y2=\"" << y2
+        << "\" stroke=\"black\" />\n";
+}
+
+std::array<nsew::coord, 4> get_points(nsew::rectangle rect)
+{
+    return {{
+        {rect.left, rect.top},
+        {rect.right, rect.top},
+        {rect.right, rect.bottom},
+        {rect.left, rect.bottom},
+    }};
+}
+
+void write_rectangle(std::ostream& os, nsew::rectangle rect)
+{
+    os << R"(<polygon points=")";
+
+    for (auto p : get_points(rect)) {
+        os << p.x << ',' << p.y << " ";
+    }
+
+    os << R"(" fill="none" stroke="black" />)";
+}
+
+void write_rectangles(std::ostream& os, std::vector<nsew::rectangle> const& rects, nsew::coord offset)
+{
+    for (auto rect : rects) {
+        write_rectangle(os, translated_by(rect, offset));
+    }
+}
+
+std::mt19937 random_gen;
 
 class test_error : public std::runtime_error {
 public:
@@ -98,12 +153,23 @@ void area_is_less_or_equal()
     for (int i = 0; i != 220000; ++i) {
         rectopt.reset();
         rects.resize(rect_count_dist(random_gen));
+        auto const area_size = 1072;
         std::generate(std::begin(rects), std::end(rects),
-            []() { return random_rectangle(random_gen, 1072, 67); });
+            []() { return random_rectangle(random_gen, area_size, 67); });
         for (auto rect : rects)
             rectopt.submit(rect);
 
         auto optimised = rectopt.scan();
+
+        #if 0
+            std::ofstream svg{"t.svg"};
+            start_svg(svg);
+            write_rectangles(svg, rectopt.rectangles, {area_size, area_size});
+            write_rectangles(svg, optimised, {(int)(3.5 * area_size), area_size});
+            end_svg(svg);
+            svg.close();
+            std::cin.get();
+        #endif
 
         check(total_area(optimised) <= total_area(rects));
     }
@@ -114,33 +180,6 @@ int main()
     zero_extent_is_empty();
     single_rect_is_noop();
     area_is_less_or_equal();
-
-    nsew::rectangle_optimiser rectopt;
-
-    auto r = nsew::rectangle{-2, 5, 7, 9};
-    auto r2 = nsew::rectangle{2, 2, 9, 6};
-    auto r3 = nsew::rectangle{0, 0, 7, 3};
-    rectopt.submit(r);
-    rectopt.submit(r2);
-    rectopt.submit(r3);
-
-    auto x = rectopt.scan();
-
-    std::cout << x.size() << " rects:\n";
-    for (auto rect : x)
-        std::cout << rect << '\n';
-
-    return 0;
-
-    if (x.size() != 1) {
-        std::cout << "wrong size";
-        return 1;
-    }
-
-    if (x[0] != r) {
-        std::cout << "wrong rect";
-        return 1;
-    }
 
     return 0;
 }
