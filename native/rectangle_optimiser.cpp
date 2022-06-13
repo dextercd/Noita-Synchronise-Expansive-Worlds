@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <vector>
 #include <cstdint>
 #include <cassert>
@@ -40,29 +41,85 @@ bool edge_position_order(edge a, edge b)
 
 void sweep_alg::next(const std::vector<range>& ranges, int position)
 {
-    auto keep_end = std::stable_partition(
-        std::begin(segments), std::end(segments),
-        [&] (auto segment) {
-            auto r = range{segment.start, segment.stop};
-            return std::find(std::begin(ranges), std::end(ranges), r) != std::end(ranges);
+    auto unconsidered_range = ranges.begin();
+
+    for (auto segment_it = segments.begin(); segment_it != std::end(segments);) {
+        auto this_segment = *segment_it;
+
+        // First range where the end is >= this segment's start
+        auto first_potential_intersect =
+            std::partition_point(
+                std::begin(ranges),
+                std::end(ranges),
+                [&](auto r) { return r.stop < this_segment.start; }
+            );
+
+        // Any ranges we skipped we must add as a new segment
+        bool iterator_invalidated = false;
+        for (; unconsidered_range != first_potential_intersect; ++unconsidered_range) {
+            iterator_invalidated = true;
+            auto range = *unconsidered_range;
+            segments.insert({position, range.start, range.stop});
         }
-    );
 
-    std::for_each(keep_end, std::end(segments), [&](auto seg) {
-        output.push_back({seg.position, seg.stop, position, seg.start});
-    });
+        if (first_potential_intersect != std::end(ranges)) {
+            unconsidered_range = std::next(first_potential_intersect);
+        }
 
-    segments.erase(keep_end, std::end(segments));
-    auto survivors = segments.size();
-    for (auto range : ranges) {
-        auto end = std::begin(segments) + survivors;
-        auto found = std::find_if(
-            std::begin(segments), end,
-            [&] (auto s) { return s.start == range.start && s.stop == range.stop; }
-        ) != end;
+        // Iterators invalidated by previous insert
+        if (iterator_invalidated)
+            segment_it = segments.find(this_segment);
 
-        if (!found)
-            segments.push_back({position, range.start, range.stop});
+        // There's no range that intersects. Create a rectangle from this segment.
+        if (first_potential_intersect == std::end(ranges)) {
+            output.push_back({
+                this_segment.position,
+                this_segment.start,
+                position,
+                this_segment.stop,
+            });
+
+            segment_it = segments.erase(segment_it);
+            continue;
+        }
+
+        auto range = *first_potential_intersect;
+
+        // Perfect match, just keep this segment and continue.
+        if (this_segment.start == range.start && this_segment.stop == range.stop) {
+            ++segment_it;
+            continue;
+        }
+
+        // Imperfect match, remove this segment and all other segments that
+        // intersect with this range.
+        auto erase_end = segment_it;
+        for (; erase_end != std::end(segments); ++erase_end) {
+            if (erase_end->start > range.stop)
+                break;
+
+            auto segment = *erase_end;
+            output.push_back({
+                segment.position,
+                segment.start,
+                position,
+                segment.stop,
+            });
+        }
+
+        segments.erase(segment_it, erase_end);
+
+        // Add this range as a new segment
+        auto [new_it, inserted] = segments.insert({position, range.start, range.stop});
+        assert(inserted);
+
+        segment_it = ++new_it;
+    }
+
+    // Any ranges we skipped we must add as a new segment
+    for (; unconsidered_range != std::end(ranges); ++unconsidered_range) {
+        auto range = *unconsidered_range;
+        segments.insert({position, range.start, range.stop});
     }
 }
 
@@ -70,8 +127,8 @@ std::vector<rectangle> rectangle_optimiser::scan()
 {
     edges.clear();
     for (auto rect : rectangles) {
-        edges.push_back({edge_side::left, rect.left, rect.bottom, rect.top});
-        edges.push_back({edge_side::right, rect.right, rect.bottom, rect.top});
+        edges.push_back({edge_side::left, rect.left, rect.top, rect.bottom});
+        edges.push_back({edge_side::right, rect.right, rect.top, rect.bottom});
     }
     std::sort(std::begin(edges), std::end(edges),
         [](edge a, edge b) { return edge_position_order(a, b); });
