@@ -72,10 +72,14 @@ function send_world_part(chunk_map, start_x, start_y, end_x, end_y)
     end
 
     local str = ffi.string(area, world.encoded_size(area))
+    send_str(str)
+end
+
+function send_str(str)
+    connection:settimeout(nil)
 
     local index = 1
     while index ~= #str do
-        connection:settimeout(nil)
         local new_index, err, partial_index = connection:send(str, index)
         if new_index == nil then
             print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " ..
@@ -155,6 +159,8 @@ function OnWorldPostUpdate()
 
     local count = thread_impl.chunk_update_count
 
+    local result = ''
+
     for i = 0, count - 1 do
         local it = begin[i]
 
@@ -169,9 +175,16 @@ function OnWorldPostUpdate()
         end_y = end_y + 2
 
         if start_x < end_x and start_y < end_y then
-            send_world_part(chunk_map, start_x, start_y, end_x, end_y)
+            local area = world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_area)
+            if area == nil then
+                return
+            end
+
+            local str = ffi.string(area, world.encoded_size(area))
+            result = result .. str
         end
     end
+    send_str(result)
 end
 
 function OnPlayerSpawned(player_entity)

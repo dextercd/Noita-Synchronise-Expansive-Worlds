@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <vector>
 
-#include <absl/container/btree_set.h>
-
 namespace nsew {
 
 // left must be greater than right and bottom must be greater that top.
@@ -48,11 +46,6 @@ struct edge {
     std::int32_t stop;
 
     bool operator==(edge const&) const = default;
-
-    template <typename H>
-    friend H AbslHashValue(H h, edge e) {
-        return H::combine(std::move(h), e.side, e.position, e.start, e.stop);
-    }
 };
 
 struct segment {
@@ -61,11 +54,6 @@ struct segment {
     std::int32_t stop;
 
     bool operator==(segment const&) const = default;
-
-    template <typename H>
-    friend H AbslHashValue(H h, segment s) {
-        return H::combine(std::move(h), s.position, s.start, s.stop);
-    }
 };
 
 struct range {
@@ -75,14 +63,8 @@ struct range {
     bool operator==(range const&) const = default;
 };
 
-struct segment_stop_cmp {
-    constexpr bool operator()(segment const& a, segment const& b) const {
-        return a.stop < b.stop;
-    }
-};
-
 struct sweep_alg {
-    absl::btree_set<segment, segment_stop_cmp> segments;
+    std::vector<segment> segments;
     std::vector<rectangle> output;
 
     void reset()
