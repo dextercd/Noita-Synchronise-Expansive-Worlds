@@ -1,4 +1,4 @@
 install(DIRECTORY nsew_client
-    DESTINATION "examples/"
+    DESTINATION "."
     COMPONENT NSEW_Client
 )

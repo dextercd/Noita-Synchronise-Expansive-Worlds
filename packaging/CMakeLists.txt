@@ -19,8 +19,8 @@ endif()
 
 if (NSEW_INCLUDE_EXAMPLE)
     list(APPEND CPACK_INSTALL_CMAKE_PROJECTS
-        ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Client /
-        ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Server /
+        ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Client /examples
+        ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Server /examples
         ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Library /examples/nsew_client/deps
     )
 
