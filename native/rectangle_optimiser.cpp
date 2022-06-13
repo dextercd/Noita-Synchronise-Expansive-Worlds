@@ -43,7 +43,7 @@ void sweep_alg::next(const std::vector<range>& ranges, int position)
 {
     auto unconsidered_range = ranges.begin();
 
-    for (auto segment_it = segments.begin(); segment_it != std::end(segments);) {
+    for (auto segment_it = std::begin(segments); segment_it != std::end(segments);) {
         auto this_segment = *segment_it;
 
         // First range where the end is >= this segment's start
@@ -133,33 +133,27 @@ std::vector<rectangle> rectangle_optimiser::scan()
     std::sort(std::begin(edges), std::end(edges),
         [](edge a, edge b) { return edge_position_order(a, b); });
 
-    active_segments.clear();
+    all_ranges.clear();
     active_ranges.clear();
 
     for (auto it = std::begin(edges); it != std::end(edges);) {
         auto current_position = it->position;
         for (; it != std::end(edges) && it->position == current_position; ++it) {
             auto edge = *it;
+            auto as_range = range{edge.start, edge.stop};
             if (edge.side == edge_side::left) {
-                auto edge_segment = segment{edge.position, edge.start, edge.stop};
-                active_segments.push_back(edge_segment);
+                all_ranges.push_back(as_range);
             } else {
-                auto remove = std::find_if(
-                    std::begin(active_segments), std::end(active_segments),
-                    [&] (auto seg) { return seg.start == edge.start && seg.stop == edge.stop; });
-                active_segments.erase(remove);
+                auto remove = std::find(
+                    std::begin(all_ranges), std::end(all_ranges), as_range);
+                all_ranges.erase(remove);
             }
         }
 
-        active_ranges.resize(std::size(active_segments));
-        std::transform(
-            std::begin(active_segments), std::end(active_segments),
-            std::begin(active_ranges),
-            [](auto edge) { return range{edge.start, edge.stop}; });
-
-        std::sort(std::begin(active_ranges), std::end(active_ranges),
+        std::sort(std::begin(all_ranges), std::end(all_ranges),
             [](auto a, auto b) { return a.start < b.start; });
 
+        active_ranges = all_ranges;
         auto ranges_end = optimise_ranges(active_ranges);
         active_ranges.erase(ranges_end, std::end(active_ranges));
 

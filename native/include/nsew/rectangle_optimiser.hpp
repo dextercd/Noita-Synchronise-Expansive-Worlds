@@ -97,7 +97,7 @@ struct sweep_alg {
 struct rectangle_optimiser {
     std::vector<rectangle> rectangles;
     std::vector<edge> edges;
-    std::vector<segment> active_segments;
+    std::vector<range> all_ranges;
     std::vector<range> active_ranges;
     sweep_alg alg;
 
@@ -106,7 +106,6 @@ struct rectangle_optimiser {
         alg.reset();
         rectangles.clear();
         edges.clear();
-        active_segments.clear();
         active_ranges.clear();
     }
 

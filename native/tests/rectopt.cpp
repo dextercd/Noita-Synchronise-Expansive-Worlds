@@ -29,12 +29,12 @@ auto constexpr position_limit = 5000;
 auto constexpr extent_limit = 5000;
 
 template<class Generator>
-nsew::rectangle random_rectangle(Generator& g)
+nsew::rectangle random_rectangle(Generator& g, int pos=position_limit, int ext=extent_limit)
 {
-    auto position_dist = std::uniform_int_distribution(-position_limit, position_limit);
+    auto position_dist = std::uniform_int_distribution(-pos, pos);
 
     // Generate rectangles with at least 1 unit of width and height
-    auto extent_dist = std::uniform_int_distribution(1, extent_limit);
+    auto extent_dist = std::uniform_int_distribution(1, ext);
 
     auto x = position_dist(g);
     auto y = position_dist(g);
@@ -91,14 +91,15 @@ std::int64_t total_area(std::vector<nsew::rectangle> const& rects)
 
 void area_is_less_or_equal()
 {
-    auto rect_count_dist = std::uniform_int_distribution(0, 10000);
+    auto const multiplier = 5;
+    auto rect_count_dist = std::uniform_int_distribution(50 * multiplier, 200 * multiplier);
+    std::vector<nsew::rectangle> rects;
     auto rectopt = nsew::rectangle_optimiser{};
-    for (int i = 0; i != 10; ++i) {
-        std::cout << '.' << std::flush;
+    for (int i = 0; i != 220000; ++i) {
         rectopt.reset();
-        std::vector<nsew::rectangle> rects(rect_count_dist(random_gen));
+        rects.resize(rect_count_dist(random_gen));
         std::generate(std::begin(rects), std::end(rects),
-            []() { return random_rectangle(random_gen); });
+            []() { return random_rectangle(random_gen, 1072, 67); });
         for (auto rect : rects)
             rectopt.submit(rect);
 
