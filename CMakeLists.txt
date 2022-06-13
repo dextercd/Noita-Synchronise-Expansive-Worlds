@@ -114,7 +114,7 @@ if (WIN32)
 
     install(
         TARGETS luasocket-socket
-        DESTINATION "examples/nsew_client/cdir/socket"
+        DESTINATION "nsew_client/cdir/socket"
         COMPONENT NSEW_Client
     )
 
@@ -122,7 +122,7 @@ if (WIN32)
         FILES
             ${luasocket_SOURCE_DIR}/src/socket.lua
             ${luasocket_SOURCE_DIR}/src/ltn12.lua
-        DESTINATION "examples/nsew_client/ldir"
+        DESTINATION "nsew_client/ldir"
         COMPONENT NSEW_Client
     )
 
@@ -133,7 +133,7 @@ if (WIN32)
             ${luasocket_SOURCE_DIR}/src/ftp.lua
             ${luasocket_SOURCE_DIR}/src/smtp.lua
             ${luasocket_SOURCE_DIR}/src/url.lua
-        DESTINATION "examples/nsew_client/ldir/socket"
+        DESTINATION "nsew_client/ldir/socket"
         COMPONENT NSEW_Client
     )
 

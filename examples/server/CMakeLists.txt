@@ -24,6 +24,6 @@ target_link_libraries(nsew_server
 )
 
 install(TARGETS nsew_server
-    DESTINATION "examples/server"
+    DESTINATION "server"
     COMPONENT NSEW_Server
 )
