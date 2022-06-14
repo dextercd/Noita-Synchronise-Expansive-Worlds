@@ -64,11 +64,11 @@ struct Cell_vtable {
     void* field26_0x68;
     void* field27_0x6c;
     void* field28_0x70;
-    void* field29_0x74;
+    bool (__thiscall *is_burning)(struct Cell*);
     void* field30_0x78;
     void* field31_0x7c;
     void* field32_0x80;
-    void* field33_0x84;
+    void (__thiscall *stop_burning)(struct Cell*);
     void* field34_0x88;
     void* field35_0x8c;
     void* field36_0x90;
@@ -78,16 +78,19 @@ struct Cell_vtable {
     void* field40_0xa0;
 };
 
+// In the Noita code this would be the ICellBurnable class
 struct Cell {
     struct Cell_vtable* vtable;
+
+    int hp;
+    char unknown1[5];
+    bool is_burning;
+    char unknown2[6];
+    uintptr_t material_ptr;
 };
 
 struct CLiquidCell {
     struct Cell cell;
-
-    int hp;
-    int unknown[3];
-    uintptr_t material_ptr;
     int x;
     int y;
     int unknown2[4];
