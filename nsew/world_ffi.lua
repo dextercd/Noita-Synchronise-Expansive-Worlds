@@ -93,7 +93,11 @@ struct CLiquidCell {
     struct Cell cell;
     int x;
     int y;
-    int unknown2[4];
+    char unknown1;
+    char unknown2;
+    bool is_static;
+    char unknown3;
+    int unknown4[3];
     struct Colour colour;
     unsigned not_colour;
 };
