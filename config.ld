@@ -7,4 +7,7 @@ file = {
 format = "markdown"
 not_luadoc = true
 
-readme = "README.md"
+topics = {
+    "README.md",
+    "LICENSE.md",
+}
