@@ -83,9 +83,9 @@ struct Cell {
     struct Cell_vtable* vtable;
 
     int hp;
-    char unknown1[5];
+    char unknown1[8];
     bool is_burning;
-    char unknown2[6];
+    char unknown2[3];
     uintptr_t material_ptr;
 };
 

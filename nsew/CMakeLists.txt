@@ -31,3 +31,7 @@ if (WIN32)
         COMPONENT NSEW_Library
     )
 endif()
+
+if (BUILD_TESTING AND WIN32)
+    add_subdirectory(test)
+endif()
