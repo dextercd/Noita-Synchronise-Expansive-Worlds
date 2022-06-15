@@ -79,7 +79,7 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 10.0.22000.0 -vcvars_ver=14.32
           cd build
-          ctest
+          ctest --output-on-failure
 
       - name: Run CPack
         shell: cmd
