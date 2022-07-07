@@ -13,7 +13,7 @@ set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
 if (NOT DEFINED CPACK_COMPONENTS_ALL)
     get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
     list(REMOVE_ITEM CPACK_COMPONENTS_ALL
-        NSEW_Client NSEW_Server
+        NSEW_Client NSEW_Server NSEW_Example
     )
 endif()
 
@@ -21,7 +21,9 @@ if (NSEW_INCLUDE_EXAMPLE)
     list(APPEND CPACK_INSTALL_CMAKE_PROJECTS
         ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Client /examples
         ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Server /examples
+        ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Example /examples
         ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Library /examples/nsew_client/deps
+        ${CMAKE_BINARY_DIR} ${CMAKE_PROJECT_NAME} NSEW_Library /examples/rainbow_cursor/deps
     )
 
     foreach(component IN LISTS CPACK_COMPONENTS_ALL)
