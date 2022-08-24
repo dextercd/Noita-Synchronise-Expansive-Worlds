@@ -151,6 +151,16 @@ if (WIN32)
     endif()
 endif()
 
+FetchContent_Declare(absl
+    GIT_REPOSITORY https://github.com/abseil/abseil-cpp
+    GIT_TAG master
+)
+
+set(ABSL_PROPAGATE_CXX_STD ON)
+
+FetchContent_MakeAvailable(absl)
+
+
 if (NSEW_EXTERNAL_MAP)
     add_subdirectory(external_map)
 endif()

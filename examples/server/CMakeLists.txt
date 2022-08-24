@@ -3,15 +3,6 @@ find_package(Boost 1.78 REQUIRED COMPONENTS
 
 include(FetchContent)
 
-FetchContent_Declare(absl
-    GIT_REPOSITORY https://github.com/abseil/abseil-cpp
-    GIT_TAG master
-)
-
-set(ABSL_PROPAGATE_CXX_STD ON)
-
-FetchContent_MakeAvailable(absl)
-
 add_executable(nsew_server
     main.cpp
 )

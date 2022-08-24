@@ -1,7 +1,15 @@
-add_library(nsew_common INTERFACE)
+add_library(nsew_common
+    rectangle_optimiser.cpp
+)
 
 target_include_directories(nsew_common
-    INTERFACE include
+    PUBLIC include
+)
+
+target_link_libraries(nsew_common
+    PUBLIC
+        # absl::flat_hash_set
+        absl::btree
 )
 
 if (BUILD_TESTING)

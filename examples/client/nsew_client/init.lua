@@ -10,6 +10,8 @@ dofile_once("mods/nsew_client/deps/nsew/load.lua")("mods/nsew_client/deps")
 
 local world_ffi = require("nsew.world_ffi")
 local world = require("nsew.world")
+local rect = require("nsew.rect")
+local rect_optimiser = rect.Optimiser_new()
 
 local game_patch = require("nsew.game_patch")
 game_patch.disable_game_pause()
@@ -72,10 +74,14 @@ function send_world_part(chunk_map, start_x, start_y, end_x, end_y)
     end
 
     local str = ffi.string(area, world.encoded_size(area))
+    send_str(str)
+end
+
+function send_str(str)
+    connection:settimeout(nil)
 
     local index = 1
     while index ~= #str do
-        connection:settimeout(nil)
         local new_index, err, partial_index = connection:send(str, index)
         if new_index == nil then
             print("For str with total length " .. #str .. "We sent from index " .. index .. " new index " ..
@@ -168,9 +174,36 @@ function OnWorldPostUpdate()
         end_x = end_x + 1
         end_y = end_y + 2
 
-        if start_x < end_x and start_y < end_y then
-            send_world_part(chunk_map, start_x, start_y, end_x, end_y)
+        local rectangle = rect.Rectangle(start_x, start_y, end_x, end_y)
+        rect_optimiser:submit(rectangle)
+    end
+
+    for i = 0, tonumber(thread_impl.world_update_params_count) - 1 do
+        local wup = thread_impl.world_update_params.begin[i]
+        local start_x = wup.update_region.top_left.x
+        local start_y = wup.update_region.top_left.y
+        local end_x = wup.update_region.bottom_right.x
+        local end_y = wup.update_region.bottom_right.y
+
+        local rectangle = rect.Rectangle(start_x, start_y, end_x, end_y)
+        rect_optimiser:submit(rectangle)
+
+    end
+
+    if GameGetFrameNum() % 3 == 0 then
+        rect_optimiser:scan()
+
+        local result = ''
+        for rect in rect.parts(rect_optimiser:iterate(), 256) do
+            local area = world.encode_area(chunk_map, rect.left, rect.top, rect.right, rect.bottom, encoded_area)
+            if area ~= nil then
+                local str = ffi.string(area, world.encoded_size(area))
+                result = result .. str
+            end
         end
+        send_str(result)
+
+        rect_optimiser:reset()
     end
 end
 

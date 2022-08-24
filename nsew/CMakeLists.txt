@@ -6,6 +6,7 @@ file(MAKE_DIRECTORY "${NSEW_BUILD}")
 
 set(SOURCES
     game_patch.lua  load.lua  native_dll.lua  world_ffi.lua  world.lua
+    rect.lua
 )
 
 foreach(source IN LISTS SOURCES)
@@ -20,7 +21,10 @@ install(DIRECTORY "${NSEW_BUILD}"
 if (WIN32)
     add_library(nsew_native MODULE
         game_pause_patch.cpp
+        rectangle_optimiser.cpp
     )
+
+    target_link_libraries(nsew_native PRIVATE nsew_common)
 
     include(GenerateExportHeader)
     generate_export_header(nsew_native)
