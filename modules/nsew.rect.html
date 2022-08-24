@@ -38,10 +38,10 @@
 
 <h2>Modules</h2>
 <ul class="nowrap">
-  <li><strong>nsew.game_patch</strong></li>
+  <li><a href="../modules/nsew.game_patch.html">nsew.game_patch</a></li>
   <li><a href="../modules/nsew.load.html">nsew.load</a></li>
   <li><a href="../modules/nsew.native_dll.html">nsew.native_dll</a></li>
-  <li><a href="../modules/nsew.rect.html">nsew.rect</a></li>
+  <li><strong>nsew.rect</strong></li>
   <li><a href="../modules/nsew.world.html">nsew.world</a></li>
   <li><a href="../modules/nsew.world_ffi.html">nsew.world_ffi</a></li>
 </ul>
@@ -55,8 +55,8 @@
 
 <div id="content">
 
-<h1>Module <code>nsew.game_patch</code></h1>
-<p>Game patches.</p>
+<h1>Module <code>nsew.rect</code></h1>
+<p>Rectangle utilities.</p>
 <p>
 
 </p>
@@ -65,8 +65,13 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#disable_game_pause">disable_game_pause ()</a></td>
-	<td class="summary">Keep the game running even when the user opens the escape menu.</td>
+	<td class="name" nowrap><a href="#parts">parts (it, size)</a></td>
+	<td class="summary">Given an iterator that returns rectangles, return an iterator where the
+ rectangle extents never exceed <code>size</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Optimiser_new">Optimiser_new ()</a></td>
+	<td class="summary">Create a new rectangle Optimiser</td>
 	</tr>
 </table>
 
@@ -78,18 +83,49 @@
 
     <dl class="function">
     <dt>
-    <a name = "disable_game_pause"></a>
-    <strong>disable_game_pause ()</strong>
+    <a name = "parts"></a>
+    <strong>parts (it, size)</strong>
     </dt>
     <dd>
-    Keep the game running even when the user opens the escape menu.
+    Given an iterator that returns rectangles, return an iterator where the
+ rectangle extents never exceed <code>size</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">it</span>
+         iterator returning squares
+        </li>
+        <li><span class="parameter">size</span>
+            <span class="types"><span class="type">int</span></span>
+         maximum width and height
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        rectangle iterator where the extents never exceed <code>size</code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Optimiser_new"></a>
+    <strong>Optimiser_new ()</strong>
+    </dt>
+    <dd>
+    Create a new rectangle Optimiser
 
 
 
     <h3>Returns:</h3>
     <ol>
 
-        bool true for success and false if the patching failed
+           <span class="types"><span class="type">Optimiser</span></span>
+        empty optimiser
     </ol>
 
 
