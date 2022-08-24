@@ -150,7 +150,7 @@ void area_is_less_or_equal()
     auto rect_count_dist = std::uniform_int_distribution(50 * multiplier, 200 * multiplier);
     std::vector<nsew::rectangle> rects;
     auto rectopt = nsew::rectangle_optimiser{};
-    for (int i = 0; i != 220000; ++i) {
+    for (int i = 0; i != 2000; ++i) {
         rectopt.reset();
         rects.resize(rect_count_dist(random_gen));
         auto const area_size = 1072;
