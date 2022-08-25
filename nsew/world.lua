@@ -146,12 +146,9 @@ local PixelRun_const_ptr = ffi.typeof("struct PixelRun const*")
 --- Load an encoded area back into the world.
 -- @param grid_world
 -- @tparam EncodedAreaHeader header header of the encoded area
--- @tparam string received string that contains the pixel runs of the encoded area
+-- @param received pointer or ffi array of PixelRun from the encoded area
 -- @see encode_area
-function world.decode(grid_world, header, received)
-    local buffer = ffi.cast('char const*', received)
-    local pixel_runs = ffi.cast(PixelRun_const_ptr, buffer)
-
+function world.decode(grid_world, header, pixel_runs)
     local chunk_map = grid_world.vtable.get_chunk_map(grid_world)
 
     local top_left_x = header.x

@@ -100,6 +100,8 @@ local header_buffer = nil
 local current_header = nil
 local partial = ''
 
+local PixelRun_const_ptr = ffi.typeof("struct PixelRun const*")
+
 function receive_one()
     if current_header == nil then
         connection:settimeout(0)
@@ -134,7 +136,8 @@ function receive_one()
     header_buffer = nil
 
     local grid_world = world_ffi.get_grid_world()
-    world.decode(grid_world, header, received)
+    local runs = ffi.cast(PixelRun_const_ptr, ffi.cast("const char*", received))
+    world.decode(grid_world, header, runs)
 
     return true
 end
