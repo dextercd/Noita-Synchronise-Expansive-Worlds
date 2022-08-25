@@ -61,9 +61,6 @@ function right_pressed()
     return ComponentGetValue2(control, "mButtonDownThrow")
 end
 
-function OnWorldPreUpdate()
-    wake_up_waiting_threads(1)
-end
 
 local encoded_area = world.EncodedArea()
 
@@ -142,7 +139,9 @@ function receive_one()
     return true
 end
 
-function OnWorldPostUpdate()
+function OnWorldPreUpdate()
+    wake_up_waiting_threads(1)
+
     if connection == nil then
         return
     end
