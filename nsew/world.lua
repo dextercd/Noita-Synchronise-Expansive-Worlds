@@ -100,10 +100,10 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
             if ppixel[0] ~= nil then
                 local pixel = ppixel[0]
 
-                -- if pixel.vtable.get_cell_type(pixel) ~= C.CELL_TYPE_SOLID then
-                local material_ptr = pixel.vtable.get_material(pixel)
-                material_number = world_ffi.get_material_id(material_ptr)
-                -- end
+                if pixel.vtable.get_cell_type(pixel) ~= C.CELL_TYPE_SOLID then
+                    local material_ptr = pixel.vtable.get_material(pixel)
+                    material_number = world_ffi.get_material_id(material_ptr)
+                end
             end
 
             if x == start_x and y == start_y then
