@@ -112,7 +112,7 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
             elseif current_material ~= material_number then
                 -- Next run
                 current_run.material = current_material
-                current_run.length = run_length
+                current_run.length = run_length - 1
 
                 if run_count == C.PIXEL_RUN_MAX then
                     print("Area too complicated to encode")
@@ -134,7 +134,7 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
     end
 
     current_run.material = current_material
-    current_run.length = run_length
+    current_run.length = run_length - 1
 
     encoded_area.header.pixel_run_count = run_count
 
@@ -161,7 +161,7 @@ function world.decode(grid_world, header, pixel_runs)
     local current_run_ix = 0
     local current_run = pixel_runs[current_run_ix]
     local new_material = current_run.material
-    local left = current_run.length
+    local left = current_run.length + 1
 
     local y = top_left_y
     while y < bottom_right_y do
@@ -189,9 +189,16 @@ function world.decode(grid_world, header, pixel_runs)
             left = left - 1
             if left <= 0 then
                 current_run_ix = current_run_ix + 1
+                if current_run_ix >= header.pixel_run_count then
+                    -- No more runs, done
+                    assert(x == bottom_right_x - 1)
+                    assert(y == bottom_right_y - 1)
+                    return
+                end
+
                 current_run = pixel_runs[current_run_ix]
                 new_material = current_run.material
-                left = current_run.length
+                left = current_run.length + 1
             end
 
             x = x + 1
