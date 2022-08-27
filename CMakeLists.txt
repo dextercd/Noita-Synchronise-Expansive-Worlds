@@ -151,12 +151,22 @@ if (WIN32)
     endif()
 endif()
 
+
+FetchContent_Declare(googletest
+    GIT_REPOSITORY https://github.com/google/googletest
+    GIT_TAG main
+)
+
+FetchContent_MakeAvailable(googletest)
+
+
 FetchContent_Declare(absl
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp
     GIT_TAG master
 )
 
-set(ABSL_PROPAGATE_CXX_STD ON)
+set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "")
+set(ABSL_USE_EXTERNAL_GOOGLETEST ON CACHE BOOL "")
 
 FetchContent_MakeAvailable(absl)
 
