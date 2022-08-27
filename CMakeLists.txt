@@ -157,6 +157,11 @@ FetchContent_Declare(googletest
     GIT_TAG main
 )
 
+# googletest has an optional Python dependency, but since we don't need that
+# feature we can disable the search for Python. Searching for Python in my
+# Windows VM takes about 20 seconds so this is a nice optimisation.
+set(Python_FIND_IMPLEMENTATIONS "")
+
 FetchContent_MakeAvailable(googletest)
 
 
