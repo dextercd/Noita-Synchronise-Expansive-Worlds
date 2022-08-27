@@ -193,7 +193,7 @@ public:
             << msg_header.top_left.x << ", " << msg_header.top_left.y << ": "
             << (int)msg_header.width << ", " << (int)msg_header.height << '\n';
 
-        auto const body_size = msg_header.pixel_run_count * 4;
+        auto const body_size = msg_header.pixel_run_count * 5;
         receive_buffer.resize(header_size + body_size);
 
         basio::async_read(

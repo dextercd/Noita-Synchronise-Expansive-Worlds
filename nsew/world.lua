@@ -25,6 +25,7 @@ struct __attribute__ ((__packed__)) EncodedAreaHeader {
 struct __attribute__ ((__packed__)) PixelRun {
     uint16_t length;
     int16_t material;
+    uint8_t flags;
 };
 
 struct __attribute__ ((__packed__)) EncodedArea {
