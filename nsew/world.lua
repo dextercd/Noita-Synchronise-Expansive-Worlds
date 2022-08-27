@@ -11,6 +11,8 @@ ffi.cdef([[
 
 enum ENCODE_CONST {
     PIXEL_RUN_MAX = 4096,
+
+    LIQUID_FLAG_STATIC = 1,
 };
 
 struct __attribute__ ((__packed__)) EncodedAreaHeader {
@@ -38,6 +40,8 @@ struct __attribute__ ((__packed__)) EncodedArea {
 world.EncodedAreaHeader = ffi.typeof("struct EncodedAreaHeader")
 world.PixelRun = ffi.typeof("struct PixelRun")
 world.EncodedArea = ffi.typeof("struct EncodedArea")
+
+local pliquid_cell = ffi.typeof("struct CLiquidCell*")
 
 --- Total bytes taken up by the encoded area
 -- @tparam EncodedArea encoded_area
@@ -86,34 +90,47 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
     encoded_area.header.width = width - 1
     encoded_area.header.height = height - 1
 
-    local current_run = encoded_area.pixel_runs[0]
-    local current_material = 0
-    local run_length = 0
     local run_count = 1
+
+    local current_run = encoded_area.pixel_runs[0]
+    local run_length = 0
+    local current_material = 0
+    local current_flags = 0
 
     local y = start_y
     while y < end_y do
         local x = start_x
         while x < end_x do
             local material_number = 0
+            local flags = 0
 
             local ppixel = world_ffi.get_cell(chunk_map, x, y)
-            if ppixel[0] ~= nil then
-                local pixel = ppixel[0]
+            local pixel = ppixel[0]
+            if pixel ~= nil then
+                local cell_type = pixel.vtable.get_cell_type(pixel)
 
-                if pixel.vtable.get_cell_type(pixel) ~= C.CELL_TYPE_SOLID then
+                if cell_type ~= C.CELL_TYPE_SOLID then
                     local material_ptr = pixel.vtable.get_material(pixel)
                     material_number = world_ffi.get_material_id(material_ptr)
+                end
+
+                if cell_type == C.CELL_TYPE_LIQUID then
+                    local liquid_cell = ffi.cast(pliquid_cell, pixel)
+                    if liquid_cell.is_static then
+                        flags = bit.bor(flags, C.LIQUID_FLAG_STATIC)
+                    end
                 end
             end
 
             if x == start_x and y == start_y then
                 -- Initial run
                 current_material = material_number
-            elseif current_material ~= material_number then
+                current_flags = flags
+            elseif current_material ~= material_number or current_flags ~= flags then
                 -- Next run
-                current_run.material = current_material
                 current_run.length = run_length - 1
+                current_run.material = current_material
+                current_run.flags = current_flags
 
                 if run_count == C.PIXEL_RUN_MAX then
                     print("Area too complicated to encode")
@@ -123,8 +140,9 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
                 current_run = encoded_area.pixel_runs[run_count]
                 run_count = run_count + 1
 
-                current_material = material_number
                 run_length = 0
+                current_material = material_number
+                current_flags = flags
             end
 
             run_length = run_length + 1
@@ -134,8 +152,9 @@ function world.encode_area(chunk_map, start_x, start_y, end_x, end_y, encoded_ar
         y = y + 1
     end
 
-    current_run.material = current_material
     current_run.length = run_length - 1
+    current_run.material = current_material
+    current_run.flags = current_flags
 
     encoded_area.header.pixel_run_count = run_count
 
@@ -162,6 +181,7 @@ function world.decode(grid_world, header, pixel_runs)
     local current_run_ix = 0
     local current_run = pixel_runs[current_run_ix]
     local new_material = current_run.material
+    local flags = current_run.flags
     local left = current_run.length + 1
 
     local y = top_left_y
@@ -182,8 +202,15 @@ function world.decode(grid_world, header, pixel_runs)
                 end
 
                 if current_material ~= new_material and new_material ~= 0 then
-                    ppixel[0] =
-                        world_ffi.construct_cell(grid_world, x, y, world_ffi.get_material_ptr(new_material), nil)
+                    local pixel = world_ffi.construct_cell(grid_world, x, y, world_ffi.get_material_ptr(new_material), nil)
+                    local cell_type = pixel.vtable.get_cell_type(pixel)
+
+                    if cell_type == C.CELL_TYPE_LIQUID then
+                        local liquid_cell = ffi.cast(pliquid_cell, pixel)
+                        liquid_cell.is_static = bit.band(flags, C.CELL_TYPE_LIQUID) == C.LIQUID_FLAG_STATIC
+                    end
+
+                    ppixel[0] = pixel
                 end
             end
 
@@ -199,6 +226,7 @@ function world.decode(grid_world, header, pixel_runs)
 
                 current_run = pixel_runs[current_run_ix]
                 new_material = current_run.material
+                flags = current_run.flags
                 left = current_run.length + 1
             end
 

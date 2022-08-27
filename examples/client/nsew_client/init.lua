@@ -192,7 +192,7 @@ function OnWorldPreUpdate()
 
     end
 
-    if GameGetFrameNum() % 3 == 0 then
+    if GameGetFrameNum() % 1 == 0 then
         rect_optimiser:scan()
 
         local result = ''
