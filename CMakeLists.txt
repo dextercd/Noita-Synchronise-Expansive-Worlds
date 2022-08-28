@@ -160,7 +160,7 @@ FetchContent_Declare(googletest
 # googletest has an optional Python dependency, but since we don't need that
 # feature we can disable the search for Python. Searching for Python in my
 # Windows VM takes about 20 seconds so this is a nice optimisation.
-set(Python_FIND_IMPLEMENTATIONS "")
+set(CMAKE_DISABLE_FIND_PACKAGE_Python ON)
 
 FetchContent_MakeAvailable(googletest)
 
