@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(nsew
-    VERSION 0.0.3
+    VERSION 0.0.4
     DESCRIPTION "Noita mod library with advanced utilities"
     HOMEPAGE_URL "https://github.com/dextercd/Noita-Synchronise-Expansive-Worlds"
     LANGUAGES C CXX
