@@ -13,9 +13,6 @@ local world = require("nsew.world")
 local rect = require("nsew.rect")
 local rect_optimiser = rect.Optimiser_new()
 
-local game_patch = require("nsew.game_patch")
-game_patch.disable_game_pause()
-
 dofile("data/scripts/lib/coroutines.lua")
 
 ModMagicNumbersFileAdd("mods/nsew_client/files/magic_numbers.xml")
