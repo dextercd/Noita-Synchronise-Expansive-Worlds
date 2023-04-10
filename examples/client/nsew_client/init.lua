@@ -28,7 +28,7 @@ function set_colour(grid_world, x, y, col)
         return
     end
 
-    if ppixel[0].vtable ~= 0xe1a45c then
+    if ppixel[0].vtable ~= 0x00e21dc0 then
         return
     end
 

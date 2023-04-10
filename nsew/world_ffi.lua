@@ -186,7 +186,7 @@ typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y
 -- @return Pointer to a pointer to a cell. You can write a cell created from
 -- @{construct_cell} to this pointer to add a cell into the world. If there's
 -- already a cell at this position, make sure to call @{remove_cell} first.
-world_ffi.get_cell = ffi.cast("get_cell_f*", 0x07bf560)
+world_ffi.get_cell = ffi.cast("get_cell_f*", 0x007c27f0)
 
 --- Remove a cell from the world.
 -- @function remove_cell
@@ -195,7 +195,7 @@ world_ffi.get_cell = ffi.cast("get_cell_f*", 0x07bf560)
 -- @tparam int x coordinate
 -- @tparam int y coordinate
 -- @tparam bool noidea no idea
-world_ffi.remove_cell = ffi.cast("remove_cell_f*", 0x6a83c0)
+world_ffi.remove_cell = ffi.cast("remove_cell_f*", 0x006ad810)
 
 --- Create a new cell.
 -- @function construct_cell
@@ -205,7 +205,7 @@ world_ffi.remove_cell = ffi.cast("remove_cell_f*", 0x6a83c0)
 -- @param material_ptr pointer to material
 -- @param pointer to memory to use. nullptr will make this function allocate its
 -- own memory
-world_ffi.construct_cell = ffi.cast("construct_cell_f*", 0x691b70)
+world_ffi.construct_cell = ffi.cast("construct_cell_f*", 0x00696fc0)
 
 --- Check if a chunk is loaded.
 -- @function chunk_loaded
@@ -216,7 +216,7 @@ world_ffi.construct_cell = ffi.cast("construct_cell_f*", 0x691b70)
 -- if world_ffi.chunk_loaded(chunk_map, x, y) then
 --   local cell = world_ffi.get_cell(chunk_map, x, y)
 --   -- ...
-world_ffi.chunk_loaded = ffi.cast("chunk_loaded_f*", 0x7bf440)
+world_ffi.chunk_loaded = ffi.cast("chunk_loaded_f*", 0x007c26d0)
 
 world_ffi.Position = ffi.typeof("struct Position")
 world_ffi.Colour = ffi.typeof("struct Colour")
@@ -233,7 +233,7 @@ world_ffi.GridWorldThreadImpl = ffi.typeof("struct GridWorldThreadImpl")
 --- Get the grid world.
 -- @return pointer to the grid world
 function world_ffi.get_grid_world()
-    local game_global = ffi.cast("void**", 0x100d558)[0]
+    local game_global = ffi.cast("void**", 0x01014760)[0]
     local world_data = ffi.cast("void**", ffi.cast("char*", game_global) + 0xc)[0]
     local grid_world = ffi.cast("struct GridWorld**", ffi.cast("char*", world_data) + 0x44)[0]
     return grid_world
@@ -246,7 +246,7 @@ local material_props_size = 0x28c
 -- @return pointer to internal material data (aka cell data).
 -- @usage local gold_ptr = world_ffi.get_material_ptr(CellFactory_GetType("gold"))
 function world_ffi.get_material_ptr(id)
-    local game_global = ffi.cast("char**", 0x100d558)[0]
+    local game_global = ffi.cast("char**", 0x01014760)[0]
     local cell_factory = ffi.cast('char**', (game_global + 0x18))[0]
     local begin = ffi.cast('char**', cell_factory + 0x18)[0]
     local ptr = begin + material_props_size * id
@@ -260,7 +260,7 @@ end
 -- @usage local mat_id = world_ffi.get_material_id(cell.vtable.get_material(cell))
 -- @see get_material_ptr
 function world_ffi.get_material_id(ptr)
-    local game_global = ffi.cast("char**", 0x100d558)[0]
+    local game_global = ffi.cast("char**", 0x01014760)[0]
     local cell_factory = ffi.cast('char**', (game_global + 0x18))[0]
     local begin = ffi.cast('char**', cell_factory + 0x18)[0]
     local offset = ffi.cast('char*', ptr) - begin
