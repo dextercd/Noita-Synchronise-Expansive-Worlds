@@ -183,9 +183,7 @@ typedef struct Cell* __thiscall construct_cell_f(struct GridWorld*, int x, int y
 -- @param chunk_map chunk map
 -- @tparam int x coordinate
 -- @tparam int y coordinate
--- @return Pointer to a pointer to a cell. You can write a cell created from
--- @{construct_cell} to this pointer to add a cell into the world. If there's
--- already a cell at this position, make sure to call @{remove_cell} first.
+-- @return Pointer to a pointer to a cell. You can write a cell created from @{construct_cell} to this pointer to add a cell into the world. If there's already a cell at this position, make sure to call @{remove_cell} first.
 world_ffi.get_cell = ffi.cast("get_cell_f*", 0x007c27f0)
 
 --- Remove a cell from the world.
@@ -203,8 +201,7 @@ world_ffi.remove_cell = ffi.cast("remove_cell_f*", 0x006ad810)
 -- @tparam int x coordinate
 -- @tparam int y coordinate
 -- @param material_ptr pointer to material
--- @param pointer to memory to use. nullptr will make this function allocate its
--- own memory
+-- @param pointer to memory to use. nullptr will make this function allocate its own memory
 world_ffi.construct_cell = ffi.cast("construct_cell_f*", 0x00696fc0)
 
 --- Check if a chunk is loaded.
