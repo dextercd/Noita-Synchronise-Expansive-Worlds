@@ -1,4 +1,10 @@
-# Noita Synchronise Expansive Worlds
+# Archived
+
+This library has been integrated into [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) to provide automatic compatibility with multiple versions of Noita.
+
+Please go use that instead.
+
+## Noita Synchronise Expansive Worlds
 
 <img src="Logo/Logo.png" alt="NSEW" style="height: 350px; float:left;">
 
